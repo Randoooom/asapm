@@ -1,12 +1,15 @@
+#![feature(explicit_generic_args_with_impl_trait)]
+
 use serde_json::json;
 use worker::*;
 
 mod utils;
+mod user;
 
 #[event(fetch)]
 pub async fn main(req: Request, env: Env) -> Result<Response> {
     // Optionally, get more helpful error messages written to the console in the case of a panic.
-    utils::set_panic_hook();
+    utils::console::set_panic_hook();
 
     // Optionally, use the Router to handle matching endpoints, use ":name" placeholders, or "*name"
     // catch-alls to match on specific patterns. Alternatively, use `Router::with_data(D)` to
