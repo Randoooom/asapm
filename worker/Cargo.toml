@@ -17,7 +17,9 @@ serde_json = "1.0.67"
 pbkdf2 = "0.10.0"
 base64 = "0.13.0"
 serde = "1.0.133"
-uuid = { version = "0.8.2", features = ["v4", "serde", "stdweb", "wasm-bindgen"] }
+jwt-simple = "0.10.8"
+# fix dependency
+getrandom = { version = "0.2", features = ["js"] }
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires

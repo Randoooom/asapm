@@ -1,3 +1,4 @@
+use jwt_simple::prelude::{Claims, Duration, HS512Key, MACLike, JWTClaims};
 use pbkdf2::password_hash::{Error, PasswordHash, PasswordVerifier};
 use pbkdf2::Pbkdf2;
 use serde::{Deserialize, Serialize};
@@ -20,6 +21,11 @@ impl AuthUser {
 pub struct UserAuthentication {
     kv: KvStoreWrapper,
     user: AuthUser,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct UserClaims {
+    username: String,
 }
 
 impl UserAuthentication {
@@ -50,5 +56,31 @@ impl UserAuthentication {
             }
             None => Err(Error::Password)
         }
+    }
+
+    /// generate new jwt as auth
+    pub fn generate_token(&self, secret: &String) -> Result<String, jwt_simple::Error> {
+        // setup jwt
+        let key = HS512Key::from_bytes(secret.as_bytes());
+        // create custom claim data
+        let claim_data = UserClaims {
+            username: self.user.username()
+        };
+        // init claims
+        let claims = Claims::with_custom_claims(claim_data, Duration::from_mins(15));
+
+        // return generated token
+        key.authenticate(claims)
+    }
+
+    /// verify a token
+    pub fn verify_token(token: &String, secret: &String) -> Result<JWTClaims<UserClaims>, jwt_simple::Error> {
+        // split Bearer off
+        let token = token.split_whitespace().last().unwrap();
+        // setup jwt
+        let key = HS512Key::from_bytes(secret.as_bytes());
+
+        // verify
+        key.verify_token::<UserClaims>(token, None)
     }
 }
