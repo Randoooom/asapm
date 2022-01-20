@@ -22,8 +22,8 @@ pub async fn post_signup(mut request: Request, context: RouteContext<DataContext
             // get user kv
             let kv = context.kv("user").unwrap();
             // search for the username in the kv
-            if kv.get(&data.username).await.is_err() {
-                return Response::error("Invalid username", 413);
+            if kv.get(&data.username).await?.is_some() {
+                return Response::error("Invalid username", 403);
             }
 
             // gen salt

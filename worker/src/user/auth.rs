@@ -53,10 +53,11 @@ impl UserAuthentication {
     /// verify the user
     pub async fn verify_login(&self) -> Result<(), Error> {
         // get user data from the kv
-        match self.kv.get_base64::<AuthUser>(self.user.username().as_str()).await {
-            Some(user_data) => {
+        match self.kv.get(self.user.username().as_str()).await {
+            Some(password) => {
+                let password = password.as_string();
                 // get password as hash
-                let hash = PasswordHash::new(&user_data.password)?;
+                let hash = PasswordHash::new(password.as_str())?;
 
                 // verify the password
                 match Pbkdf2.verify_password(self.user.password.as_bytes(), &hash) {
