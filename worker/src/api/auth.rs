@@ -5,7 +5,6 @@ use worker::{Request, Response, RouteContext};
 use serde::{Deserialize, Serialize};
 use crate::DataContext;
 use crate::user::auth::{AuthUser, UserAuthentication};
-use crate::user::user::User;
 
 #[derive(Deserialize, Serialize)]
 struct SignUp {

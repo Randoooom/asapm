@@ -1,10 +1,8 @@
 #![feature(explicit_generic_args_with_impl_trait)]
 
-use jwt_simple::prelude::JWTClaims;
-use serde_json::json;
 use worker::*;
 use worker::kv::KvStore;
-use crate::user::auth::{AuthUser, UserAuthentication, UserClaims};
+use crate::user::auth::{UserAuthentication};
 use crate::user::user::User;
 
 mod utils;
@@ -17,6 +15,17 @@ pub type DataContext = Option<User>;
 pub async fn main(req: Request, env: Env) -> Result<Response> {
     // Optionally, get more helpful error messages written to the console in the case of a panic.
     utils::console::set_panic_hook();
+
+    // handle preflights
+    if &req.method() == &Method::Options {
+        let mut headers = Headers::new();
+        headers.append("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS, PUT")?;
+        headers.append("Access-Control-Max-Age", "86400")?;
+        headers.append("Access-Control-Allow-Origin", "*")?;
+        headers.append("Access-Control-Allow-Headers", "*")?;
+
+        return Ok(Response::empty()?.with_headers(headers).with_status(204));
+    }
 
     // check for auth required
     let requires_auth = match req.url()?.path().to_lowercase().as_str() {
@@ -68,8 +77,6 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
         .get_async("/user/password", api::user::get_passwords)
         .post_async("/user/password", api::user::post_password)
 
-        // handle preflights
-        .options("*", |_, _| { Ok(Response::empty().unwrap().with_status(204)) })
         .run(req, env)
         .await {
         Ok(response) => {

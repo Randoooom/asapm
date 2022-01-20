@@ -1,4 +1,3 @@
-use serde::{Deserialize, Serialize};
 use worker::kv::{KvError, KvStore};
 use crate::utils::kv::KvStoreWrapper;
 

@@ -3,7 +3,6 @@ use pbkdf2::password_hash::{Error, PasswordHash, PasswordVerifier};
 use pbkdf2::Pbkdf2;
 use serde::{Deserialize, Serialize};
 use worker::kv::KvStore;
-use crate::user::user::User;
 use crate::utils::kv::KvStoreWrapper;
 
 #[derive(Deserialize, Serialize)]
@@ -20,13 +19,6 @@ pub struct TokenResponse {
 impl AuthUser {
     pub fn username(&self) -> String {
         self.username.clone()
-    }
-
-    pub fn new(username: String, password: String) -> Self {
-        Self {
-            username,
-            password,
-        }
     }
 }
 
