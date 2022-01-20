@@ -13,6 +13,8 @@ WORKERS_RS_VERSION = "0.0.7"
 SECRET = "YOUR SUPER DUPER SECRET JWT KEY"
 
 [build]
+# the sed fixes the usage of 'performance.now()' by jwt-simple
+# it got banned by cloudflare due possbile timing attacks
 command = "cargo install -q worker-build && worker-build --release && sed -i 's/performance.now()/Date.now()/' build/worker/index_bg.mjs" # required
 
 [build.upload]

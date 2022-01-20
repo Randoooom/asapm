@@ -74,8 +74,11 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
         .post_async("/auth/login", api::auth::post_login)
 
         // user
+        .delete_async("/user", api::user::delete_user)
         .get_async("/user/password", api::user::get_passwords)
         .post_async("/user/password", api::user::post_password)
+        .put_async("/user/password", api::user::edit_password)
+        .delete_async("/user/password", api::user::delete_password)
 
         .run(req, env)
         .await {
