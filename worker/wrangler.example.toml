@@ -2,6 +2,11 @@ name = "asapm"
 type = "javascript"
 workers_dev = true
 compatibility_date = "2022-01-16"
+kv_namespaces = [
+    # replace your namespaces here (or use miniflare)
+    { binding = "password", preview_id = "", id = "" },
+    { binding = "user", preview_id = "", id = "" }
+]
 
 [vars]
 WORKERS_RS_VERSION = "0.0.7"

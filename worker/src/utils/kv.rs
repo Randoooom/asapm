@@ -2,6 +2,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use worker::kv::{KvError, KvStore, KvValue, PutOptionsBuilder, ToRawKvValue};
 
+#[derive(Clone)]
 pub struct KvStoreWrapper {
     kv: KvStore,
 }

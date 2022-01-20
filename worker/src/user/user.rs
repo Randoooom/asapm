@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use worker::kv::{KvError, KvStore};
 use crate::utils::kv::KvStoreWrapper;
 
+#[derive(Clone)]
 pub struct User {
     username: String,
     account_kv: KvStoreWrapper,
@@ -18,9 +19,15 @@ impl User {
         }
     }
 
+    /// init new user
+    pub async fn init_new_user(username: &String, hash: &String, kv: KvStore) -> Result<(), KvError> {
+        // save the hash into kv
+        kv.put(username, hash)?.execute().await
+    }
+
     /// get all passwords from the account
     /// all passwords are JSON.stringify() and aes encrypted by the client for the best security
-    /// identification of the passwords are based on the full ciphertext
+    /// identification of the passwords are based on the full ciphertext (base64 encoded)
     /// the rust struct would look like this:
     ///
     /// pub struct Password {

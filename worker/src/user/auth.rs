@@ -12,9 +12,21 @@ pub struct AuthUser {
     password: String,
 }
 
+#[derive(Deserialize, Serialize)]
+pub struct TokenResponse {
+    token: String,
+}
+
 impl AuthUser {
     pub fn username(&self) -> String {
         self.username.clone()
+    }
+
+    pub fn new(username: String, password: String) -> Self {
+        Self {
+            username,
+            password,
+        }
     }
 }
 
@@ -26,6 +38,12 @@ pub struct UserAuthentication {
 #[derive(Serialize, Deserialize)]
 pub struct UserClaims {
     username: String,
+}
+
+impl UserClaims {
+    pub fn username(&self) -> String {
+        self.username.clone()
+    }
 }
 
 impl UserAuthentication {
@@ -41,7 +59,7 @@ impl UserAuthentication {
     }
 
     /// verify the user
-    pub async fn verify_user(&self) -> Result<(), Error> {
+    pub async fn verify_login(&self) -> Result<(), Error> {
         // get user data from the kv
         match self.kv.get_base64::<AuthUser>(self.user.username().as_str()).await {
             Some(user_data) => {
@@ -59,7 +77,7 @@ impl UserAuthentication {
     }
 
     /// generate new jwt as auth
-    pub fn generate_token(&self, secret: &String) -> Result<String, jwt_simple::Error> {
+    pub fn generate_token(&self, secret: &String) -> TokenResponse {
         // setup jwt
         let key = HS512Key::from_bytes(secret.as_bytes());
         // create custom claim data
@@ -70,7 +88,9 @@ impl UserAuthentication {
         let claims = Claims::with_custom_claims(claim_data, Duration::from_mins(15));
 
         // return generated token
-        key.authenticate(claims)
+        TokenResponse {
+            token: key.authenticate(claims).unwrap()
+        }
     }
 
     /// verify a token
