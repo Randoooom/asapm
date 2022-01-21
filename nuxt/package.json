@@ -17,9 +17,13 @@
     "*.{css,vue}": "stylelint"
   },
   "dependencies": {
+    "@nuxtjs/auth-next": "^5.0.0-1642755117.7a526bb",
     "@nuxtjs/axios": "^5.13.6",
     "core-js": "^3.15.1",
+    "material-design-icons-iconfont": "^6.1.1",
     "nuxt": "^2.15.7",
+    "sass": "^1.49.0",
+    "sass-loader": "^10.2.1",
     "vuetify": "^2.5.5"
   },
   "devDependencies": {

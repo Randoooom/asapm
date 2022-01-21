@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2018",
-    "module": "ESNext",
+    "module": "commonjs",
     "moduleResolution": "Node",
     "lib": [
       "ESNext",
@@ -26,7 +26,8 @@
     "types": [
       "@nuxt/types",
       "@nuxtjs/axios",
-      "@types/node"
+      "@types/node",
+      "@nuxtjs/auth-next"
     ]
   },
   "exclude": [
