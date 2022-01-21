@@ -24,11 +24,21 @@
   -->
 
 <template>
-  <v-app>
-    <navigation />
-    <nuxt id='nuxt-root' class='mt-16' />
-    <app-footer />
-  </v-app>
+  <v-app-bar app color='primary'>
+    <v-container class='d-flex align-center'>
+      <v-toolbar-title>
+        <nuxt-link to='/' class='white--text font-weight-bold'>
+          ASAPM
+        </nuxt-link>
+      </v-toolbar-title>
+
+      <v-spacer />
+
+      <v-btn-toggle mandatory group>
+        <v-btn text color='white'>Test</v-btn>
+      </v-btn-toggle>
+    </v-container>
+  </v-app-bar>
 </template>
 
 <script lang='ts'>
@@ -36,24 +46,8 @@ import Vue from 'vue'
 import Component from 'vue-class-component'
 
 @Component({
-  name: 'Default',
-  components: {
-    'navigation': () => import('~/components/layout/Navigation.vue'),
-    'app-footer': () => import('~/components/layout/Footer.vue'),
-  }
+  name: 'Navigation'
 })
-export default class DefaultLayout extends Vue {}
+export default class NavigationComponent extends Vue {
+}
 </script>
-
-<style lang='sass'>
-html
-  .v-app
-    min-height: 100vh
-
-  a
-    text-decoration: none
-
-  #nuxt-root
-    height: calc(100vh - 128px)
-    width: 100vw
-</style>

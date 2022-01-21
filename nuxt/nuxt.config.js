@@ -6,7 +6,6 @@ export default {
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    titleTemplate: '%s - ASAPM',
     title: 'ASAPM',
     htmlAttrs: {
       lang: 'en',
@@ -94,19 +93,27 @@ export default {
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
   vuetify: {
     treeShake: true,
-    customVariables: ['~/assets/variables.scss'],
+    customVariables: ['~/assets/variables.sass'],
     icons: { iconFont: 'md' },
     theme: {
-      dark: true,
       themes: {
+        light: {
+          primary: colors.teal,
+          secondary: colors.cyan,
+          accent: colors.deepPurple,
+          error: colors.pink,
+          warning: colors.amber,
+          info: colors.indigo,
+          success: colors.green,
+        },
         dark: {
-          primary: colors.blue.darken2,
-          accent: colors.grey.darken3,
-          secondary: colors.amber.darken3,
-          info: colors.teal.lighten1,
-          warning: colors.amber.base,
-          error: colors.deepOrange.accent4,
-          success: colors.green.accent3,
+          primary: colors.teal.darken3,
+          secondary: colors.cyan.darken3,
+          accent: colors.deepPurple.darken3,
+          error: colors.pink.darken3,
+          warning: colors.amber.darken3,
+          info: colors.indigo.darken3,
+          success: colors.green.darken3,
         },
       },
     },

@@ -24,11 +24,23 @@
   -->
 
 <template>
-  <v-app>
-    <navigation />
-    <nuxt id='nuxt-root' class='mt-16' />
-    <app-footer />
-  </v-app>
+  <v-footer color='primary' padless class='pt-5 pb-5'>
+    <v-container>
+      <v-row
+        justify='center'
+        no-gutters
+      >
+        <v-col
+          id='theme'
+          class='text-center white--text'
+          cols='12'
+        >
+          Copyright {{ new Date().getFullYear() }} — <strong>Randoooom</strong>
+          <v-switch v-model='$vuetify.theme.dark' label='Dark' color='accent'/>
+        </v-col>
+      </v-row>
+    </v-container>
+  </v-footer>
 </template>
 
 <script lang='ts'>
@@ -36,24 +48,23 @@ import Vue from 'vue'
 import Component from 'vue-class-component'
 
 @Component({
-  name: 'Default',
-  components: {
-    'navigation': () => import('~/components/layout/Navigation.vue'),
-    'app-footer': () => import('~/components/layout/Footer.vue'),
-  }
+  name: 'Footer'
 })
-export default class DefaultLayout extends Vue {}
+export default class FooterComponent extends Vue {
+}
 </script>
 
-<style lang='sass'>
-html
-  .v-app
-    min-height: 100vh
+<style lang='sass' scoped>
+.v-footer
+  position: absolute
+  bottom: 0
+  left: 0
+  right: 0
 
-  a
-    text-decoration: none
-
-  #nuxt-root
-    height: calc(100vh - 128px)
-    width: 100vw
+#theme
+  .v-input--switch
+    position: absolute
+    right: 30px
+    width: fit-content
+    bottom: 0
 </style>
