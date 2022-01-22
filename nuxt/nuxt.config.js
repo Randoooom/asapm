@@ -96,6 +96,7 @@ export default {
     customVariables: ['~/assets/variables.sass'],
     icons: { iconFont: 'md' },
     theme: {
+      dark: true,
       themes: {
         light: {
           primary: colors.teal,
