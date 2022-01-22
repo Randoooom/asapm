@@ -47,5 +47,8 @@ import Component from 'vue-class-component'
   auth: 'guest'
 })
 export default class IndexComponent extends Vue {
+  mounted() {
+    this.$axios.get('/test')
+  }
 }
 </script>

@@ -47,10 +47,7 @@ export default {
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    baseURL:
-      process.env.NODE_ENV === 'production'
-        ? 'https://asapm.randoooom.workers.dev'
-        : 'http://localhost:8787',
+    baseURL: 'api://',
   },
 
   // apply auth
