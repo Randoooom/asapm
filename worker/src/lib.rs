@@ -25,14 +25,15 @@
 
 #![feature(explicit_generic_args_with_impl_trait)]
 
-use worker::*;
-use worker::kv::KvStore;
-use crate::user::auth::{UserAuthentication};
-use crate::user::user::User;
+extern crate core;
 
 mod utils;
 mod user;
 mod api;
+
+use worker::*;
+use worker::kv::KvStore;
+use user::User;
 
 pub type DataContext = Option<User>;
 
@@ -43,6 +44,7 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
 
     // handle preflights
     if &req.method() == &Method::Options {
+        // set cors headers
         let mut headers = Headers::new();
         headers.append("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS, PUT")?;
         headers.append("Access-Control-Max-Age", "86400")?;
@@ -68,19 +70,12 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
                 // get token
                 match req.headers().get("Authorization")? {
                     Some(token) => {
+                        // get the kv
+                        let kv: KvStore = env.kv("user")?;
                         // verify the token
-                        match UserAuthentication::verify_token(&token, &env.var("SECRET")?.to_string()) {
-                            Ok(claims) => {
-                                // get kv's
-                                let password_kv: KvStore = env.kv("password")?;
-                                let account_kv: KvStore = env.kv("user")?;
-
-                                // build user
-                                let user = User::new(claims.custom.username(), password_kv, account_kv);
-                                // create router
-                                Router::with_data(Some(user))
-                            }
-                            Err(_) => return Response::error("Unauthorized", 401)
+                        match User::new_from_token(kv, token, env.var("SECRET")?.to_string()).await {
+                            Ok(user) => Router::with_data(Some(user)),
+                            Err(()) => return Response::error("Unauthorized", 401)
                         }
                     }
                     None => return Response::error("Unauthorized", 401)
@@ -96,14 +91,12 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
     match router
         // auth
         .post_async("/auth/signup", api::auth::post_signup)
-        .post_async("/auth/login", api::auth::post_login)
+        .post_async("/auth/login", api::auth::post_auth_login)
 
         // user
         .delete_async("/user", api::user::delete_user)
-        .get_async("/user/password", api::user::get_passwords)
-        .post_async("/user/password", api::user::post_password)
-        .put_async("/user/password", api::user::edit_password)
-        .delete_async("/user/password", api::user::delete_password)
+        .get_async("/user/data", api::user::get_data)
+        .post_async("/user/data", api::user::push_data)
 
         .run(req, env)
         .await {
