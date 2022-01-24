@@ -47,7 +47,7 @@ export default {
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    baseURL: 'api://',
+    baseURL: 'api:/',
   },
 
   // apply auth
@@ -120,6 +120,7 @@ export default {
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
     friendlyErrors: false,
+    transpile: ['@tauri-apps/api/tauri'],
   },
 
   generate: {

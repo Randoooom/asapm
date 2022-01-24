@@ -24,6 +24,7 @@
  */
 
 use std::iter;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use aes_gcm_siv::{Aes256GcmSiv, Key, Nonce};
 use aes_gcm_siv::aead::{Aead, NewAead};
@@ -46,6 +47,7 @@ pub struct Encryption {
   cipher: Aes256GcmSiv,
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct CipherText {
   ciphertext: String,
   nonce: String,

@@ -23,31 +23,20 @@
  * SOFTWARE.
  */
 
-use serde::{Deserialize, Serialize};
-use crate::model::encryption::{Encryption, EncryptionError};
+use tauri::{State, command, AppHandle, Wry};
+use tauri::api::path::app_dir;
+use crate::model::user::UserData;
+use crate::{User, UserState};
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Backup {
-  // the uuid will be encrypted with the user password for better security on the local disk
-  // will be available in plaintext here, not sure how secure that is
-  uuid: String,
-  enabled: bool,
-}
-
-impl Backup {
-  pub fn uuid(self) -> String {
-    self.uuid.clone()
-  }
-
-  pub fn enabled(self) -> bool {
-    self.enabled.clone()
-  }
-
-  /// update and decrypt the data with the encryption
-  pub fn init_from_login(mut self, encryption: &Encryption) -> Result<Self, EncryptionError> {
-    // decrypt uuid
-    self.uuid = encryption.decrypt(self.uuid.as_str())?;
-    // return the updated version
-    Ok(self)
+#[command]
+pub fn login(data: UserData, state: State<'_, UserState>, handle: AppHandle<Wry>) -> Result<(), ()> {
+  // create the user from the data
+  match User::new_from_login(&app_dir(&*handle.config()).unwrap(), data) {
+    Ok(user) => {
+      // update data in state
+      *state.0.lock().unwrap() = Some(user);
+      Ok(())
+    }
+    Err(_) => Err(())
   }
 }

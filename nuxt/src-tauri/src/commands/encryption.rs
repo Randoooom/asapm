@@ -23,31 +23,37 @@
  * SOFTWARE.
  */
 
-use serde::{Deserialize, Serialize};
-use crate::model::encryption::{Encryption, EncryptionError};
+use tauri::{State, command};
+use crate::{User, UserState};
+use crate::model::encryption::{CipherText, Encryption, EncryptionError};
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Backup {
-  // the uuid will be encrypted with the user password for better security on the local disk
-  // will be available in plaintext here, not sure how secure that is
-  uuid: String,
-  enabled: bool,
+#[command]
+pub fn decrypt(data: String, state: State<'_, UserState>) -> Result<String, ()> {
+  // get the user
+  match *&state.0.lock().unwrap().as_ref() {
+    Some(user) => {
+      // decrypt the data
+      match user.encryption.decrypt(data.as_str()) {
+        Ok(decrypted) => Ok(decrypted),
+        Err(_) => Err(())
+      }
+    }
+    // throw err on logged out
+    None => Err(())
+  }
 }
 
-impl Backup {
-  pub fn uuid(self) -> String {
-    self.uuid.clone()
-  }
-
-  pub fn enabled(self) -> bool {
-    self.enabled.clone()
-  }
-
-  /// update and decrypt the data with the encryption
-  pub fn init_from_login(mut self, encryption: &Encryption) -> Result<Self, EncryptionError> {
-    // decrypt uuid
-    self.uuid = encryption.decrypt(self.uuid.as_str())?;
-    // return the updated version
-    Ok(self)
+#[command]
+pub fn encrypt(data: String, state: State<'_, UserState>) -> Result<CipherText, ()> {
+  // get the user
+  match *&state.0.lock().unwrap().as_ref() {
+    Some(user) => {
+      // encrypt the data
+      match user.encryption.encrypt(data.as_str()) {
+        Ok(encrypted) => Ok(encrypted),
+        Err(_) => Err(())
+      }
+    },
+    None => Err(())
   }
 }

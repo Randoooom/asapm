@@ -26,4 +26,3 @@
 pub mod encryption;
 pub mod user;
 pub mod backup;
-pub mod router;

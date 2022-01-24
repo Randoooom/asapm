@@ -23,17 +23,95 @@
  * SOFTWARE.
  */
 
+use thiserror::Error;
+use std::fs;
+use std::path::PathBuf;
+use pbkdf2::password_hash::{PasswordHash, PasswordVerifier};
+use pbkdf2::Pbkdf2;
+use serde::{Deserialize, Serialize};
 use crate::model::backup::Backup;
+use crate::model::encryption::Encryption;
+
+#[derive(Deserialize, Serialize)]
+pub struct UserData {
+  username: String,
+  password: String,
+}
+
+#[derive(Error, Debug)]
+pub enum ConfigError {
+  #[error(transparent)]
+  IOError(#[from] std::io::Error),
+
+  #[error(transparent)]
+  ParseError(#[from] serde_json::Error),
+
+  #[error("Unauthorized")]
+  Unknown,
+}
 
 pub struct User {
   // identification for login
   username: String,
-  // hashed with PBKDF2
-  password: String,
   // only optional for the user
   backup: Option<Backup>,
+  // will also save the user password
+  pub encryption: Encryption,
 }
 
-// impl User {
-//   pub fn new_from_login() -> Result<Self, ()> {}
-// }
+#[derive(Deserialize, Serialize)]
+pub struct RawUser {
+  username: String,
+  backup: Option<Backup>,
+  // hashed
+  password: String,
+}
+
+impl RawUser {
+  /// create an new user just by the username and the disk
+  /// does not not contain any usable sensitive data
+  fn new_from_disk(directory: &PathBuf, username: &str) -> Result<Self, ConfigError> {
+    // create path for the possible user
+    let path = directory.join(format!("/{}", username));
+    // read file content
+    let content = fs::read_to_string(path)?;
+
+    // parse json
+    let parsed = serde_json::from_str::<Self>(content.as_str())?;
+    Ok(parsed)
+  }
+}
+
+impl User {
+  /// init new full user based on login credentials
+  pub fn new_from_login(directory: &PathBuf, data: UserData) -> Result<Self, ConfigError> {
+    // load raw user
+    let mut raw = RawUser::new_from_disk(directory, data.username.as_str())?;
+
+    // compare passwords
+    let hash = PasswordHash::new(raw.password.as_str()).unwrap();
+    match Pbkdf2.verify_password(data.password.as_bytes(), &hash) {
+      Ok(()) => {
+        // init encryption
+        let encryption = Encryption::new_from_passphrase(data.password);
+        // init backup
+        if let Some(backup) = raw.backup {
+          raw.backup = Some(backup.init_from_login(&encryption).unwrap());
+        }
+
+        Ok(
+          Self {
+            username: raw.username,
+            backup: raw.backup,
+            encryption,
+          }
+        )
+      }
+      Err(_) => Err(ConfigError::Unknown)
+    }
+  }
+
+  pub fn backup(&self) -> Option<Backup> {
+    self.backup.clone()
+  }
+}

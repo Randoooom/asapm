@@ -23,31 +23,5 @@
  * SOFTWARE.
  */
 
-use serde::{Deserialize, Serialize};
-use crate::model::encryption::{Encryption, EncryptionError};
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Backup {
-  // the uuid will be encrypted with the user password for better security on the local disk
-  // will be available in plaintext here, not sure how secure that is
-  uuid: String,
-  enabled: bool,
-}
-
-impl Backup {
-  pub fn uuid(self) -> String {
-    self.uuid.clone()
-  }
-
-  pub fn enabled(self) -> bool {
-    self.enabled.clone()
-  }
-
-  /// update and decrypt the data with the encryption
-  pub fn init_from_login(mut self, encryption: &Encryption) -> Result<Self, EncryptionError> {
-    // decrypt uuid
-    self.uuid = encryption.decrypt(self.uuid.as_str())?;
-    // return the updated version
-    Ok(self)
-  }
-}
+pub mod encryption;
+pub mod authentication;

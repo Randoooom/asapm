@@ -25,15 +25,31 @@
 
 <template>
   <v-container class='justify-center align-center d-flex'>
-    <v-card class='pt-5 pb-5' max-width='500px' width='100%'>
+    <v-card class='pt-5 pb-5' max-width='400px' width='100%'>
       <v-card-title class='d-block text-center'>
         Login
       </v-card-title>
 
       <v-card-text>
-        <v-text-field label='Username' />
-        <v-text-field label='Password' />
+        <v-alert v-if='error' type='error'>
+          Believe in yourself, maybe you can do it!
+        </v-alert>
+
+        <v-text-field v-model='loginData.username' label='Username' filled />
+        <v-text-field v-model='loginData.password' :append-icon="show ? 'mdi-eye' : 'mdi-eye-off'"
+                      filled :type='show ? "text" : "password"' label='Password'
+                      @click:append='show = !show' />
+
+        <nuxt-link to='/signup'>
+          Create new account
+        </nuxt-link>
       </v-card-text>
+
+      <v-card-actions>
+        <v-btn text color='primary' :loading='processing' @click='login'>
+          Login
+        </v-btn>
+      </v-card-actions>
     </v-card>
   </v-container>
 </template>
@@ -41,14 +57,34 @@
 <script lang='ts'>
 import Vue from 'vue'
 import Component from 'vue-class-component'
+import { invoke } from '@tauri-apps/api/tauri'
 
 @Component({
   name: 'Index',
   auth: 'guest'
 })
 export default class IndexComponent extends Vue {
-  mounted() {
-    this.$axios.get('/test')
+  show: boolean = false
+  error: boolean = false
+  processing: boolean = false
+
+  loginData = {
+    username: '',
+    password: ''
+  }
+
+  async login() {
+    this.processing = true
+
+    await invoke('login', { data: this.loginData })
+    .then(() => {
+      this.$router.push('/dashboard')
+      this.processing = false
+    })
+    .catch(() => {
+      this.error = true
+      this.processing = false
+    })
   }
 }
 </script>

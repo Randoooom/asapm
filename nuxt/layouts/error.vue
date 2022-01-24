@@ -35,6 +35,12 @@
       <v-card-subtitle class='text-center'>
         {{ error.message }}
       </v-card-subtitle>
+
+      <v-card-actions>
+        <v-btn text nuxt href='/'>
+          Back
+        </v-btn>
+      </v-card-actions>
     </v-card>
   </div>
 </template>
