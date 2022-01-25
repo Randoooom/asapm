@@ -62,6 +62,8 @@ pub struct PasswordData {
   password: String,
   url: Option<String>,
   description: Option<String>,
+  // identification
+  uuid: String,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -70,6 +72,12 @@ pub struct Password {
   iv: String,
   // encrypted, would be PasswordDat
   data: String,
+}
+
+#[derive(Deserialize, Serialize)]
+pub enum PasswordType {
+  Data(PasswordData),
+  Raw(Password),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -84,7 +92,7 @@ pub struct User {
   // the password data
   password: RawUserPassword,
   // must be decrypted and decoded
-  passwords: Vec<PasswordData>,
+  passwords: Vec<PasswordType>,
 }
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -152,7 +160,7 @@ impl User {
         let hash = Pbkdf2.hash_password(hash.to_string().as_bytes(), &salt).unwrap();
 
         // init the user
-        let user = Self {
+        let mut user = Self {
           username: data.username,
           encryption: Some(encryption.clone()),
           backup: None,
@@ -166,7 +174,7 @@ impl User {
         };
 
         // save the data
-        Self::write_file(&path, &user)?;
+        Self::write_file(&path, &mut user)?;
 
         // return ok
         Ok(user)
@@ -205,9 +213,9 @@ impl User {
           // decrypt the data
           let raw = encryption.decrypt(password.data.clone(), password.iv.clone()).unwrap();
           // parse json
-          serde_json::from_str::<PasswordData>(raw.as_str()).unwrap()
+          PasswordType::Data(serde_json::from_str::<PasswordData>(raw.as_str()).unwrap())
         })
-          .collect::<Vec<PasswordData>>();
+          .collect::<Vec<PasswordType>>();
 
         Ok(
           Self {
@@ -224,7 +232,21 @@ impl User {
   }
 
   /// write the userdata into the file
-  pub fn write_file(path: &PathBuf, data: &Self) -> Result<(), ConfigError> {
+  pub fn write_file(path: &PathBuf, data: &mut Self) -> Result<(), ConfigError> {
+    data.passwords = data.passwords.iter().map(|password| {
+      // stringify
+      let raw = serde_json::to_string(password).unwrap();
+      // encrypt
+      let encrypted = data.encryption.clone().unwrap().encrypt(raw.as_str()).unwrap();
+
+      PasswordType::Raw(
+        Password {
+          iv: encrypted.nonce,
+          data: encrypted.ciphertext,
+        }
+      )
+    }).collect::<Vec<PasswordType>>();
+
     // convert to string
     let raw = serde_json::to_string(&data).unwrap();
     // write the bytes from the raw data into the file
