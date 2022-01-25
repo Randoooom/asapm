@@ -39,53 +39,7 @@ export default {
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules
-  modules: [
-    // https://go.nuxtjs.dev/axios
-    '@nuxtjs/axios',
-    '@nuxtjs/auth-next',
-  ],
-
-  // Axios module configuration: https://go.nuxtjs.dev/config-axios
-  axios: {
-    baseURL: 'api:/',
-  },
-
-  // apply auth
-  router: {
-    middleware: ['auth'],
-  },
-
-  auth: {
-    resetOnError: true,
-    localStorage: false,
-    cookie: {
-      options: {
-        sameSite: 'Strict',
-        secure: 'true',
-      },
-    },
-    strategies: {
-      local: {
-        user: false,
-        scheme: 'local',
-        token: {
-          property: 'token',
-          maxAge: 1800,
-        },
-        endpoints: {
-          login: { url: '/auth/login', method: 'post' },
-          logout: false,
-          user: false,
-        },
-      },
-    },
-    redirect: {
-      login: '/login',
-      logout: '/login',
-      home: '/',
-    },
-    fullPathRedirect: true,
-  },
+  modules: [],
 
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
   vuetify: {

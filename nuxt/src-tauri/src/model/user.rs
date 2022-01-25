@@ -31,6 +31,7 @@ use pbkdf2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, Salt
 use pbkdf2::password_hash::rand_core::OsRng;
 use pbkdf2::Pbkdf2;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 use crate::model::backup::Backup;
 use crate::model::encryption::{Encryption, EncryptionError};
 
@@ -55,18 +56,18 @@ pub enum ConfigError {
   Unknown,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 // complete serde::to_string() and aes encrypted on the disk (base64)
 pub struct PasswordData {
-  login: String,
-  password: String,
+  login: Option<String>,
+  password: Option<String>,
   url: Option<String>,
   description: Option<String>,
   // identification
   uuid: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Password {
   // will change on each write (properly)
   iv: String,
@@ -74,7 +75,7 @@ pub struct Password {
   data: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub enum PasswordType {
   Data(PasswordData),
   Raw(Password),
@@ -255,7 +256,50 @@ impl User {
     Ok(())
   }
 
+  /// create new password
+  pub fn new_password(&mut self) -> PasswordData {
+    let data = PasswordData {
+      login: None,
+      password: None,
+      url: None,
+      description: None,
+      uuid: Uuid::new_v4().to_string(),
+    };
+
+    // push the new password
+    self.passwords.push(PasswordType::Data(data.clone()));
+    data
+  }
+
+  /// update an specific password
+  pub fn update_password(&mut self, data: PasswordData) {
+    // update an existing password
+    self.passwords = self.passwords.clone().into_iter().map(|ty| {
+      if let PasswordType::Data(password) = ty.clone() {
+        if password.clone().uuid.eq(&data.uuid) {
+          return PasswordType::Data(data.clone());
+        }
+      }
+      ty
+    }).collect::<Vec<PasswordType>>();
+  }
+
+  /// delete an existing password
+  pub fn delete_password(&mut self, data: PasswordData) {
+    // remove it via filter
+    self.passwords = self.passwords.clone().into_iter().filter(|ty| {
+      if let PasswordType::Data(password) = ty.clone() {
+        return !password.uuid.eq(&data.uuid);
+      }
+      true
+    }).collect::<Vec<PasswordType>>();
+  }
+
   pub fn backup(&self) -> Option<Backup> {
     self.backup.clone()
+  }
+
+  pub fn passwords(&self) -> Vec<PasswordType> {
+    self.passwords.clone()
   }
 }

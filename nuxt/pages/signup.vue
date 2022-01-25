@@ -46,7 +46,7 @@
       </v-card-text>
 
       <v-card-actions>
-        <v-btn text color='primary' @click='signup'>
+        <v-btn text color='primary' :loading='processing' @click='signup'>
           Execute
         </v-btn>
       </v-card-actions>
@@ -61,11 +61,11 @@ import FormValidator from '~/mixins/FormValidator'
 
 @Component({
   name: 'Signup',
-  auth: 'guest'
 })
 export default class SignupComponent extends mixins(FormValidator) {
   show: boolean = false
   confirm: string = ''
+  processing: boolean = false
 
   get matchPassword() {
     return (confirm: string) => confirm === this.data.password || 'Does not match!'
@@ -77,7 +77,12 @@ export default class SignupComponent extends mixins(FormValidator) {
   }
 
   async signup() {
+    this.processing = true
     return await invoke('signup', { data: this.data })
+      .then(() => {
+        this.processing = false
+        this.$router.push('/user/dashboard')
+      })
   }
 }
 </script>

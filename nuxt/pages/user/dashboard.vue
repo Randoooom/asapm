@@ -24,32 +24,39 @@
   -->
 
 <template>
-  <v-container class='justify-center align-center d-flex'>
-    <v-card class='pt-5 pb-5' max-width='400px' width='100%'>
-      <v-card-title class='d-block text-center'>
-        Login
+  <v-container>
+    <v-card>
+      <v-card-title>
+        <v-dialog v-model='dialog' max-width='500px'>
+          <v-card>
+            <v-card-title>
+              Create new password
+            </v-card-title>
+
+            <v-card-text>
+              <v-row>
+                <v-col cols='12' sm='6' md='6'>
+                  <v-text-field type='text' label='Login' filled />
+                </v-col>
+
+                <v-col cols='12' sm='6' md='6'>
+                  <v-text-field type='password' label='password' filled />
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+        </v-dialog>
+
+        <v-btn color='primary' @click='dialog = true'>
+          Create new password
+        </v-btn>
       </v-card-title>
 
       <v-card-text>
-        <v-alert v-if='error' type='error'>
-          Believe in yourself, maybe you can do it!
-        </v-alert>
-
-        <v-text-field v-model='loginData.username' label='Username' filled />
-        <v-text-field v-model='loginData.password' :append-icon="show ? 'mdi-eye' : 'mdi-eye-off'"
-                      filled :type='show ? "text" : "password"' label='Password'
-                      @click:append='show = !show' />
-
-        <nuxt-link to='/signup'>
-          Create new account
-        </nuxt-link>
+        <v-list>
+          <password v-for='password in passwords' :key='password.uuid' :password='password' />
+        </v-list>
       </v-card-text>
-
-      <v-card-actions>
-        <v-btn text color='primary' :loading='processing' @click='login'>
-          Login
-        </v-btn>
-      </v-card-actions>
     </v-card>
   </v-container>
 </template>
@@ -60,30 +67,19 @@ import Component from 'vue-class-component'
 import { invoke } from '@tauri-apps/api/tauri'
 
 @Component({
-  name: 'Index',
-})
-export default class IndexComponent extends Vue {
-  show: boolean = false
-  error: boolean = false
-  processing: boolean = false
-
-  loginData = {
-    username: '',
-    password: ''
+  name: 'Dashboard',
+  components: {
+    'password': () => import('~/components/Password.vue')
   }
+})
+export default class DashboardComponent extends Vue {
+  passwords: any[] = []
+  dialog: boolean = false
 
-  async login() {
-    this.processing = true
-
-    await invoke('login', { data: this.loginData })
-    .then(() => {
-      this.$router.push('/user/dashboard')
-      this.processing = false
-    })
-    .catch(() => {
-      this.error = true
-      this.processing = false
-    })
+  async mounted() {
+    // @ts-ignore
+    this.passwords = await invoke('get_passwords')
+      .then(value => value)
   }
 }
 </script>
