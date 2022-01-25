@@ -8,8 +8,8 @@ mod commands;
 
 use std::fs;
 use std::sync::{Arc, Mutex};
-use tauri::api::path::{app_dir, BaseDirectory};
-use tauri::{Config, generate_handler};
+use tauri::api::path::{app_dir};
+use tauri::{generate_handler};
 use crate::model::user::User;
 
 pub struct UserState(Arc<Mutex<Option<User>>>);
@@ -26,9 +26,8 @@ fn main() {
     // write empty user into the state
     .manage(UserState(Arc::new(Mutex::new(None))))
     .invoke_handler(generate_handler![
-      commands::encryption::decrypt,
-      commands::encryption::encrypt,
       commands::authentication::login,
+      commands::authentication::signup,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

@@ -32,6 +32,8 @@ pub struct Backup {
   // will be available in plaintext here, not sure how secure that is
   uuid: String,
   enabled: bool,
+  // the aes iv
+  iv: String,
 }
 
 impl Backup {
@@ -46,7 +48,7 @@ impl Backup {
   /// update and decrypt the data with the encryption
   pub fn init_from_login(mut self, encryption: &Encryption) -> Result<Self, EncryptionError> {
     // decrypt uuid
-    self.uuid = encryption.decrypt(self.uuid.as_str())?;
+    self.uuid = encryption.decrypt(self.uuid.clone(), self.iv.clone())?;
     // return the updated version
     Ok(self)
   }

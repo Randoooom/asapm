@@ -26,11 +26,13 @@
 use thiserror::Error;
 use std::fs;
 use std::path::PathBuf;
-use pbkdf2::password_hash::{PasswordHash, PasswordVerifier};
+use rand::Rng;
+use pbkdf2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
+use pbkdf2::password_hash::rand_core::OsRng;
 use pbkdf2::Pbkdf2;
 use serde::{Deserialize, Serialize};
 use crate::model::backup::Backup;
-use crate::model::encryption::Encryption;
+use crate::model::encryption::{Encryption, EncryptionError};
 
 #[derive(Deserialize, Serialize)]
 pub struct UserData {
@@ -46,25 +48,64 @@ pub enum ConfigError {
   #[error(transparent)]
   ParseError(#[from] serde_json::Error),
 
+  #[error(transparent)]
+  EncryptionError(#[from] EncryptionError),
+
   #[error("Unauthorized")]
   Unknown,
 }
 
+#[derive(Deserialize, Serialize)]
+// complete serde::to_string() and aes encrypted on the disk (base64)
+pub struct PasswordData {
+  login: String,
+  password: String,
+  url: Option<String>,
+  description: Option<String>,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Password {
+  // will change on each write (properly)
+  iv: String,
+  // encrypted, would be PasswordDat
+  data: String,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct User {
   // identification for login
   username: String,
   // only optional for the user
   backup: Option<Backup>,
   // will also save the user password
-  pub encryption: Encryption,
+  #[serde(skip_serializing, skip_deserializing)]
+  pub encryption: Option<Encryption>,
+  // the password data
+  password: RawUserPassword,
+  // must be decrypted and decoded
+  passwords: Vec<PasswordData>,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+struct RawUserPassword {
+  // aes encrypted random key
+  key: String,
+  // the key iv
+  iv: String,
+  // the hash of the hash
+  hash: String,
+  // the original salt
+  salt: String,
 }
 
 #[derive(Deserialize, Serialize)]
 pub struct RawUser {
   username: String,
   backup: Option<Backup>,
-  // hashed
-  password: String,
+  password: RawUserPassword,
+  // base64 encoded and encrypted
+  passwords: Vec<Password>,
 }
 
 impl RawUser {
@@ -72,7 +113,7 @@ impl RawUser {
   /// does not not contain any usable sensitive data
   fn new_from_disk(directory: &PathBuf, username: &str) -> Result<Self, ConfigError> {
     // create path for the possible user
-    let path = directory.join(format!("/{}", username));
+    let path = directory.join(username);
     // read file content
     let content = fs::read_to_string(path)?;
 
@@ -83,32 +124,113 @@ impl RawUser {
 }
 
 impl User {
+  /// create new user from signup information
+  pub fn new_from_signup(directory: &PathBuf, data: UserData) -> Result<Self, ConfigError> {
+    // create the path
+    let path = directory.join(&data.username);
+    // check for already existing user
+    match &path.exists() {
+      // return err on true, because we will not overwrite any userdata
+      true => return Err(ConfigError::Unknown),
+      false => {
+        // hash the password
+        let salt = SaltString::generate(&mut OsRng);
+        let hash_salt = salt.as_str();
+        let hash = Pbkdf2.hash_password(data.password.as_bytes(), &salt).unwrap();
+
+        // setup the file key as random base64
+        let key = Encryption::generate(32);
+        // build the initial encryption
+        let encryption = Encryption::new(base64::decode(&key).unwrap().as_slice());
+
+        // encrypt it for storage
+        let key_encryption = Encryption::new(hash.hash.unwrap().as_bytes());
+        let key = key_encryption.encrypt(key.as_str())?;
+
+        // second time because we encrypt the key with the first hash
+        let salt = SaltString::generate(&mut OsRng);
+        let hash = Pbkdf2.hash_password(hash.to_string().as_bytes(), &salt).unwrap();
+
+        // init the user
+        let user = Self {
+          username: data.username,
+          encryption: Some(encryption.clone()),
+          backup: None,
+          password: RawUserPassword {
+            key: key.ciphertext,
+            iv: key.nonce,
+            hash: hash.to_string(),
+            salt: hash_salt.to_string(),
+          },
+          passwords: Vec::new(),
+        };
+
+        // save the data
+        Self::write_file(&path, &user)?;
+
+        // return ok
+        Ok(user)
+      }
+    }
+  }
+
   /// init new full user based on login credentials
   pub fn new_from_login(directory: &PathBuf, data: UserData) -> Result<Self, ConfigError> {
     // load raw user
     let mut raw = RawUser::new_from_disk(directory, data.username.as_str())?;
+    let cloned = raw.password.clone();
 
     // compare passwords
-    let hash = PasswordHash::new(raw.password.as_str()).unwrap();
-    match Pbkdf2.verify_password(data.password.as_bytes(), &hash) {
+    let hash = PasswordHash::new(cloned.hash.as_str()).unwrap();
+    // hash the input password
+    let salt = SaltString::new(raw.password.salt.as_str()).unwrap();
+    let password = Pbkdf2.hash_password(data.password.as_bytes(), &salt).unwrap();
+    // match the hashes
+    match Pbkdf2.verify_password(password.to_string().as_bytes(), &hash) {
       Ok(()) => {
-        // init encryption
-        let encryption = Encryption::new_from_passphrase(data.password);
+        // decrypt the stored key
+        let encryption = Encryption::new(password.hash.unwrap().as_bytes());
+        let key = encryption.decrypt(cloned.key, cloned.iv)?;
+
+        // create new encryption for the user
+        let encryption = Encryption::new(base64::decode(key).unwrap().as_slice());
+
         // init backup
         if let Some(backup) = raw.backup {
           raw.backup = Some(backup.init_from_login(&encryption).unwrap());
         }
 
+        // decrypt the passwords
+        let passwords = raw.passwords.iter().map(|password| {
+          // decrypt the data
+          let raw = encryption.decrypt(password.data.clone(), password.iv.clone()).unwrap();
+          // parse json
+          serde_json::from_str::<PasswordData>(raw.as_str()).unwrap()
+        })
+          .collect::<Vec<PasswordData>>();
+
         Ok(
           Self {
             username: raw.username,
             backup: raw.backup,
-            encryption,
+            encryption: Some(encryption),
+            password: raw.password,
+            passwords,
           }
         )
       }
       Err(_) => Err(ConfigError::Unknown)
     }
+  }
+
+  /// write the userdata into the file
+  pub fn write_file(path: &PathBuf, data: &Self) -> Result<(), ConfigError> {
+    // convert to string
+    let raw = serde_json::to_string(&data).unwrap();
+    // write the bytes from the raw data into the file
+    fs::write(path, raw)?;
+
+    Ok(())
   }
 
   pub fn backup(&self) -> Option<Backup> {

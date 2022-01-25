@@ -43,34 +43,29 @@ pub enum EncryptionError {
 type Result<T> = std::result::Result<T, EncryptionError>;
 
 /// struct for general encryption and decryption of the data
+#[derive(Clone)]
 pub struct Encryption {
   cipher: Aes256GcmSiv,
 }
 
 #[derive(Deserialize, Serialize)]
 pub struct CipherText {
-  ciphertext: String,
-  nonce: String,
+  pub ciphertext: String,
+  pub nonce: String,
 }
 
 impl Encryption {
   /// generate random nonce
-  pub fn generate_nonce() -> String {
-    // init rng
-    let mut rng = thread_rng();
+  pub fn generate(length: usize) -> String {
+    // generate random bytes
+    let bytes = (0..length).map(|_| { rand::random::<u8>() }).collect::<Vec<u8>>();
 
-    // generate
-    iter::repeat(())
-      .map(|()| rng.sample(Alphanumeric))
-      .map(char::from)
-      .take(12)
-      .collect::<String>()
+    base64::encode(bytes)
   }
 
-  /// create new from passphrase
-  pub fn new_from_passphrase(passphrase: String) -> Self {
-    // parse to bytes
-    let key = Key::from_slice(passphrase.as_bytes());
+  /// create new from bytes
+  pub fn new(key: &[u8]) -> Self {
+    let key = Key::from_slice(key);
     // build cipher
     let cipher = Aes256GcmSiv::new(key);
 
@@ -80,28 +75,25 @@ impl Encryption {
   }
 
   /// decrypt a &str into a String
-  pub fn decrypt(&self, data: &str) -> Result<String> {
+  pub fn decrypt(&self, data: String, iv: String) -> Result<String> {
     // parse nonce and ciphertext from data
-    let nonce = &data[..12].to_string();
-    let ciphertext = &data[13..].to_string();
     // create nonce as array
-    let nonce = Nonce::from_slice(nonce.as_bytes());
-
+    let nonce = Nonce::from_slice(iv.as_bytes());
     // decrypt
-    let plaintext = self.cipher.decrypt(&nonce, ciphertext.as_bytes())?;
-    let parsed = String::from_utf8(plaintext)?;
+    let plaintext = self.cipher.decrypt(&nonce, base64::decode(data).unwrap().as_slice())?;
+    let parsed = String::from_utf8(plaintext.clone()).unwrap_or(base64::encode(plaintext));
     Ok(parsed)
   }
 
   /// encrypt data with random nonce
   pub fn encrypt(&self, data: &str) -> Result<CipherText> {
     // generate nonce
-    let nonce_string = Self::generate_nonce();
+    let nonce_string = Self::generate(8);
     let nonce = Nonce::from_slice(nonce_string.as_bytes());
 
     // encrypt
     let ciphertext = self.cipher.encrypt(&nonce, data.as_bytes())?;
-    let ciphertext = String::from_utf8(ciphertext)?;
+    let ciphertext = base64::encode(ciphertext);
 
     // return nonce and ciphertext
     Ok(

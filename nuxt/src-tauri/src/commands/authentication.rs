@@ -40,3 +40,20 @@ pub fn login(data: UserData, state: State<'_, UserState>, handle: AppHandle<Wry>
     Err(_) => Err(())
   }
 }
+
+#[command]
+pub fn signup(data: UserData, state: State<'_, UserState>, handle: AppHandle<Wry>) -> Result<(), ()> {
+  // prevent already existing users creating new ones
+  if let Some(_) = *state.0.lock().unwrap() {
+    return Err(());
+  }
+  // try the signup
+  match User::new_from_signup(&app_dir(&*handle.config()).unwrap(), data) {
+    Ok(user) => {
+      // update the user
+      *state.0.lock().unwrap() = Some(user);
+      Ok(())
+    }
+    Err(_) => Err(())
+  }
+}

@@ -27,27 +27,27 @@
   <v-container class='justify-center align-center d-flex'>
     <v-card class='pt-5 pb-5' max-width='400px' width='100%'>
       <v-card-title class='d-block text-center'>
-        Login
+        Account creation
       </v-card-title>
 
+      <v-card-subtitle class='mt-2'>
+        Please insert the requested information.
+      </v-card-subtitle>
+
       <v-card-text>
-        <v-alert v-if='error' type='error'>
-          Believe in yourself, maybe you can do it!
-        </v-alert>
-
-        <v-text-field v-model='loginData.username' label='Username' filled />
-        <v-text-field v-model='loginData.password' :append-icon="show ? 'mdi-eye' : 'mdi-eye-off'"
+        <v-text-field v-model='data.username' filled label='Username' :rules='[required]' />
+        <v-text-field v-model='data.password' :append-icon="show ? 'mdi-eye' : 'mdi-eye-off'"
                       filled :type='show ? "text" : "password"' label='Password'
+                      :rules='[required]' @click:append='show = !show' />
+        <v-text-field v-model='confirm' :rules='[matchPassword, required]'
+                      :append-icon="show ? 'mdi-eye' : 'mdi-eye-off'"
+                      filled :type='show ? "text" : "password"' label='Confirm password'
                       @click:append='show = !show' />
-
-        <nuxt-link to='/signup'>
-          Create new account
-        </nuxt-link>
       </v-card-text>
 
       <v-card-actions>
-        <v-btn text color='primary' :loading='processing' @click='login'>
-          Login
+        <v-btn text color='primary' @click='signup'>
+          Execute
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -55,36 +55,29 @@
 </template>
 
 <script lang='ts'>
-import Vue from 'vue'
-import Component from 'vue-class-component'
+import Component, { mixins } from 'vue-class-component'
 import { invoke } from '@tauri-apps/api/tauri'
+import FormValidator from '~/mixins/FormValidator'
 
 @Component({
-  name: 'Index',
+  name: 'Signup',
   auth: 'guest'
 })
-export default class IndexComponent extends Vue {
+export default class SignupComponent extends mixins(FormValidator) {
   show: boolean = false
-  error: boolean = false
-  processing: boolean = false
+  confirm: string = ''
 
-  loginData = {
+  get matchPassword() {
+    return (confirm: string) => confirm === this.data.password || 'Does not match!'
+  }
+
+  data = {
     username: '',
     password: ''
   }
 
-  async login() {
-    this.processing = true
-
-    await invoke('login', { data: this.loginData })
-    .then(() => {
-      this.$router.push('/user/dashboard')
-      this.processing = false
-    })
-    .catch(() => {
-      this.error = true
-      this.processing = false
-    })
+  async signup() {
+    return await invoke('signup', { data: this.data })
   }
 }
 </script>

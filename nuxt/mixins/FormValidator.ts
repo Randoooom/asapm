@@ -23,37 +23,12 @@
  * SOFTWARE.
  */
 
-use tauri::{State, command};
-use crate::{User, UserState};
-use crate::model::encryption::{CipherText, Encryption, EncryptionError};
+import Vue from 'vue'
+import Component from 'vue-class-component'
 
-#[command]
-pub fn decrypt(data: String, state: State<'_, UserState>) -> Result<String, ()> {
-  // get the user
-  match *&state.0.lock().unwrap().as_ref() {
-    Some(user) => {
-      // decrypt the data
-      match user.encryption.decrypt(data.as_str()) {
-        Ok(decrypted) => Ok(decrypted),
-        Err(_) => Err(())
-      }
-    }
-    // throw err on logged out
-    None => Err(())
-  }
-}
-
-#[command]
-pub fn encrypt(data: String, state: State<'_, UserState>) -> Result<CipherText, ()> {
-  // get the user
-  match *&state.0.lock().unwrap().as_ref() {
-    Some(user) => {
-      // encrypt the data
-      match user.encryption.encrypt(data.as_str()) {
-        Ok(encrypted) => Ok(encrypted),
-        Err(_) => Err(())
-      }
-    },
-    None => Err(())
+@Component
+export default class FormValidator extends Vue {
+  get required() {
+    return (data: string) => !!data || 'Required!'
   }
 }

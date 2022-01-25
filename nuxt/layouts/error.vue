@@ -37,7 +37,7 @@
       </v-card-subtitle>
 
       <v-card-actions>
-        <v-btn text nuxt href='/'>
+        <v-btn text nuxt to='/'>
           Back
         </v-btn>
       </v-card-actions>
