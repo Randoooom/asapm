@@ -23,5 +23,37 @@
  * SOFTWARE.
  */
 
-pub mod kv;
-pub mod console;
+use tauri::{State, command, AppHandle, Wry};
+use tauri::api::path::app_dir;
+use crate::model::user::UserData;
+use crate::{User, UserState};
+
+#[command]
+pub fn login(data: UserData, state: State<'_, UserState>, handle: AppHandle<Wry>) -> Result<(), ()> {
+  // create the user from the data
+  match User::new_from_login(&app_dir(&*handle.config()).unwrap(), data) {
+    Ok(user) => {
+      // update data in state
+      *state.0.lock().unwrap() = Some(user);
+      Ok(())
+    }
+    Err(_) => Err(())
+  }
+}
+
+#[command]
+pub fn signup(data: UserData, state: State<'_, UserState>, handle: AppHandle<Wry>) -> Result<(), ()> {
+  // prevent already existing users creating new ones
+  if let Some(_) = *state.0.lock().unwrap() {
+    return Err(());
+  }
+  // try the signup
+  match User::new_from_signup(&app_dir(&*handle.config()).unwrap(), data) {
+    Ok(user) => {
+      // update the user
+      *state.0.lock().unwrap() = Some(user);
+      Ok(())
+    }
+    Err(_) => Err(())
+  }
+}

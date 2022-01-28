@@ -23,5 +23,14 @@
  * SOFTWARE.
  */
 
-pub mod kv;
-pub mod console;
+export default function ({ store, route, redirect }) {
+  // get loggedIn state
+  const loggedIn = store.state.auth.loggedIn
+
+  // return on false
+  if (!loggedIn) return
+
+  // check the route and redirect
+  const needsRedirect = !route.fullPath.startsWith('user')
+  if (needsRedirect) return redirect('/user/dashboard')
+}

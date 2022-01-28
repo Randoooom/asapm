@@ -23,5 +23,41 @@
  * SOFTWARE.
  */
 
-pub mod kv;
-pub mod console;
+import { invoke } from '@tauri-apps/api/tauri'
+
+export const state = () => ({
+  currentPassword: undefined,
+  passwords: [],
+})
+
+export const mutations = {
+  /**
+   * update the currentPassword
+   * @param state
+   * @param password
+   */
+  pushPassword(state, password) {
+    state.currentPassword = password
+  },
+
+  /**
+   * set the password list
+   * @param state
+   * @param passwords
+   */
+  setPasswords(state, passwords) {
+    state.passwords = passwords
+  },
+}
+
+export const actions = {
+  /**
+   * fetch the data from tauri
+   */
+  async fetchData({ commit }) {
+    // invoke command
+    await invoke('get_passwords').then((passwords) =>
+      commit('setPasswords', passwords)
+    )
+  },
+}

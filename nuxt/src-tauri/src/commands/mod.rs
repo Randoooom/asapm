@@ -23,5 +23,5 @@
  * SOFTWARE.
  */
 
-pub mod kv;
-pub mod console;
+pub mod authentication;
+pub mod password;

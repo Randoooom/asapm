@@ -23,5 +23,16 @@
  * SOFTWARE.
  */
 
-pub mod kv;
-pub mod console;
+export const state = () => ({
+  loggedIn: false,
+})
+
+export const mutations = {
+  login(state) {
+    state.loggedIn = true
+  },
+
+  logout(state) {
+    state.loggedIn = false
+  },
+}
