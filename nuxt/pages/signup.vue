@@ -35,6 +35,10 @@
       </v-card-subtitle>
 
       <v-card-text>
+        <v-alert v-if='error' type='error'>
+          Issues occurred while processing request.
+        </v-alert>
+
         <v-text-field v-model='data.username' filled label='Username' :rules='[required]' />
         <v-text-field v-model='data.password' :append-icon="show ? 'mdi-eye' : 'mdi-eye-off'"
                       filled :type='show ? "text" : "password"' label='Password'
@@ -47,7 +51,13 @@
 
       <v-card-actions>
         <v-btn text color='primary' :loading='processing' @click='signup'>
-          Execute
+          SignUp
+        </v-btn>
+
+        <v-spacer />
+
+        <v-btn color='primary' text nuxt to='/'>
+          Back
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -60,12 +70,13 @@ import { invoke } from '@tauri-apps/api/tauri'
 import FormValidator from '~/mixins/FormValidator'
 
 @Component({
-  name: 'Signup',
+  name: 'Signup'
 })
 export default class SignupComponent extends mixins(FormValidator) {
   show: boolean = false
   confirm: string = ''
   processing: boolean = false
+  error: boolean = false
 
   get matchPassword() {
     return (confirm: string) => confirm === this.data.password || 'Does not match!'
@@ -82,6 +93,10 @@ export default class SignupComponent extends mixins(FormValidator) {
       .then(() => {
         this.processing = false
         this.$router.push('/user/dashboard')
+      })
+      .catch(() => {
+        this.processing = false
+        this.error = true
       })
   }
 }

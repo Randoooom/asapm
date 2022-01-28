@@ -56,9 +56,10 @@ pub enum ConfigError {
   Unknown,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 // complete serde::to_string() and aes encrypted on the disk (base64)
 pub struct PasswordData {
+  name: Option<String>,
   login: Option<String>,
   password: Option<String>,
   url: Option<String>,
@@ -67,7 +68,7 @@ pub struct PasswordData {
   uuid: String,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Password {
   // will change on each write (properly)
   iv: String,
@@ -75,7 +76,8 @@ pub struct Password {
   data: String,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
+#[serde(untagged)]
 pub enum PasswordType {
   Data(PasswordData),
   Raw(Password),
@@ -130,9 +132,46 @@ impl RawUser {
     let parsed = serde_json::from_str::<Self>(content.as_str())?;
     Ok(parsed)
   }
+
+  fn write_to_disk(&self, path: &PathBuf) -> Result<(), ConfigError> {
+    // stringify
+    let raw = serde_json::to_string(&self).unwrap();
+    // write the bytes into the file
+    fs::write(&path, raw.as_bytes())?;
+    Ok(())
+  }
+}
+
+impl From<&User> for RawUser {
+  fn from(user: &User) -> Self {
+    // encrypt the passwords
+    let passwords = user.passwords.iter().map(|password| {
+      // stringify
+      let raw = serde_json::to_string(password).unwrap();
+      // encrypt
+      let encrypted = user.encryption.clone().unwrap().encrypt(raw.as_str()).unwrap();
+
+        Password {
+          iv: encrypted.nonce,
+          data: encrypted.ciphertext,
+        }
+    }).collect::<Vec<Password>>();
+
+    Self {
+      username: user.username(),
+      backup: user.backup(),
+      password: user.password.clone(),
+      passwords,
+    }
+  }
 }
 
 impl User {
+  /// get the username
+  pub fn username(&self) -> String {
+    self.username.clone()
+  }
+
   /// create new user from signup information
   pub fn new_from_signup(directory: &PathBuf, data: UserData) -> Result<Self, ConfigError> {
     // create the path
@@ -161,7 +200,7 @@ impl User {
         let hash = Pbkdf2.hash_password(hash.to_string().as_bytes(), &salt).unwrap();
 
         // init the user
-        let mut user = Self {
+        let user = Self {
           username: data.username,
           encryption: Some(encryption.clone()),
           backup: None,
@@ -175,7 +214,7 @@ impl User {
         };
 
         // save the data
-        Self::write_file(&path, &mut user)?;
+        Self::write(&user, &path.parent().unwrap().to_path_buf())?;
 
         // return ok
         Ok(user)
@@ -233,27 +272,11 @@ impl User {
   }
 
   /// write the userdata into the file
-  pub fn write_file(path: &PathBuf, data: &mut Self) -> Result<(), ConfigError> {
-    data.passwords = data.passwords.iter().map(|password| {
-      // stringify
-      let raw = serde_json::to_string(password).unwrap();
-      // encrypt
-      let encrypted = data.encryption.clone().unwrap().encrypt(raw.as_str()).unwrap();
-
-      PasswordType::Raw(
-        Password {
-          iv: encrypted.nonce,
-          data: encrypted.ciphertext,
-        }
-      )
-    }).collect::<Vec<PasswordType>>();
-
-    // convert to string
-    let raw = serde_json::to_string(&data).unwrap();
-    // write the bytes from the raw data into the file
-    fs::write(path, raw)?;
-
-    Ok(())
+  pub fn write(&self, path: &PathBuf) -> Result<(), ConfigError> {
+    // create the raw data
+    let raw = RawUser::from(self);
+    // write the data
+    raw.write_to_disk(&path.join(&self.username))
   }
 
   /// create new password
@@ -264,6 +287,7 @@ impl User {
       url: None,
       description: None,
       uuid: Uuid::new_v4().to_string(),
+      name: Some("Unnamed".to_string())
     };
 
     // push the new password

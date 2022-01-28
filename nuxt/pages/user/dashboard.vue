@@ -27,25 +27,7 @@
   <v-container>
     <v-card>
       <v-card-title>
-        <v-dialog v-model='dialog' max-width='500px'>
-          <v-card>
-            <v-card-title>
-              Create new password
-            </v-card-title>
-
-            <v-card-text>
-              <v-row>
-                <v-col cols='12' sm='6' md='6'>
-                  <v-text-field type='text' label='Login' filled />
-                </v-col>
-
-                <v-col cols='12' sm='6' md='6'>
-                  <v-text-field type='password' label='password' filled />
-                </v-col>
-              </v-row>
-            </v-card-text>
-          </v-card>
-        </v-dialog>
+        <password-dialog v-model='dialog' />
 
         <v-btn color='primary' @click='dialog = true'>
           Create new password
@@ -54,7 +36,20 @@
 
       <v-card-text>
         <v-list>
-          <password v-for='password in passwords' :key='password.uuid' :password='password' />
+          <v-list-item-group>
+            <template v-for='password in passwords'>
+              <v-list-item :key='password.uuid' @click='editPassword(password)'>
+                <v-list-item-title>
+                  {{ password.name }}
+                </v-list-item-title>
+
+                <v-list-item-content>
+                  {{ password.login }}
+                </v-list-item-content>
+              </v-list-item>
+              <v-divider :key='password.uuid' />
+            </template>
+          </v-list-item-group>
         </v-list>
       </v-card-text>
     </v-card>
@@ -64,22 +59,29 @@
 <script lang='ts'>
 import Vue from 'vue'
 import Component from 'vue-class-component'
-import { invoke } from '@tauri-apps/api/tauri'
 
 @Component({
   name: 'Dashboard',
   components: {
-    'password': () => import('~/components/Password.vue')
+    'password-dialog': () => import('~/components/password/PasswordDialog.vue')
   }
 })
 export default class DashboardComponent extends Vue {
-  passwords: any[] = []
   dialog: boolean = false
 
   async mounted() {
-    // @ts-ignore
-    this.passwords = await invoke('get_passwords')
-      .then(value => value)
+    await this.$store.dispatch('password/fetchData')
+  }
+
+  editPassword(password: any) {
+    // set current password
+    this.$store.commit('password/pushPassword', password)
+    // activate dialog
+    this.dialog = true
+  }
+
+  get passwords() {
+    return this.$store.state.password.passwords
   }
 }
 </script>

@@ -23,13 +23,10 @@
  * SOFTWARE.
  */
 
-use std::iter;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use aes_gcm_siv::{Aes256GcmSiv, Key, Nonce};
 use aes_gcm_siv::aead::{Aead, NewAead};
-use rand::{Rng, thread_rng};
-use rand::distributions::Alphanumeric;
 
 #[derive(Error, Debug)]
 pub enum EncryptionError {

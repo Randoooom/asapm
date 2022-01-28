@@ -25,9 +25,7 @@
 
 <template>
   <v-app>
-    <navigation />
-    <nuxt id='nuxt-root' class='mt-16' />
-    <app-footer />
+    <nuxt class='mt-8' />
   </v-app>
 </template>
 
@@ -37,10 +35,6 @@ import Component from 'vue-class-component'
 
 @Component({
   name: 'Default',
-  components: {
-    'navigation': () => import('~/components/layout/Navigation.vue'),
-    'app-footer': () => import('~/components/layout/Footer.vue'),
-  }
 })
 export default class DefaultLayout extends Vue {}
 </script>
@@ -52,8 +46,4 @@ html
 
   a
     text-decoration: none
-
-  #nuxt-root
-    height: calc(100vh - 128px)
-    width: 100vw
 </style>

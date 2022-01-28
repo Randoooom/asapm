@@ -44,7 +44,7 @@ pub fn new_password(state: State<'_, UserState>, handle: AppHandle<Wry>) -> Resu
     Some(user) => {
       let data = user.new_password();
       // save data
-      match User::write_file(&app_dir(&*handle.config()).unwrap(), user) {
+      match user.write(&app_dir(&*handle.config()).unwrap()) {
         Ok(()) => Ok(data),
         Err(_) => Err(())
       }
@@ -60,9 +60,12 @@ pub fn update_password(data: PasswordData, state: State<'_, UserState>, handle: 
     Some(user) => {
       user.update_password(data);
       // save data
-      match User::write_file(&app_dir(&*handle.config()).unwrap(),user) {
+      match user.write(&app_dir(&*handle.config()).unwrap()) {
         Ok(()) => Ok(()),
-        Err(_) => Err(())
+        Err(error) => {
+          println!("{:?}", error);
+          Err(())
+        }
       }
     }
     None => Err(())
