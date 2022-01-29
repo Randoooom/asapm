@@ -38,8 +38,8 @@
         <v-list flat>
           <v-list-item-group>
             <template v-for='password in passwords'>
-              <v-list-item :key='password.uuid' @click.native='editPassword(password)'>
-                <v-list-item-title>
+              <v-list-item :key='password.uuid'>
+                <v-list-item-title @click='editPassword(password)'>
                   {{ password.name }}
                 </v-list-item-title>
 
@@ -48,7 +48,13 @@
                 </v-list-item-content>
 
                 <v-list-item-icon>
-                  <v-icon small @click.prevent='copyPassword(password)'>
+                  <a v-if='password.url && password.url.length !== 0' :href='password.url' target='_blank' @click=''>
+                    <v-icon color='white' small>
+                      link
+                    </v-icon>
+                  </a>
+
+                  <v-icon class='ml-3' small @click.prevent='copyPassword(password)'>
                     content_copy
                   </v-icon>
                 </v-list-item-icon>
