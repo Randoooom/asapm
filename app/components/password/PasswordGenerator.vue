@@ -80,7 +80,7 @@ export default class PasswordGeneratorComponent extends mixins(PasswordUtil) {
     await this.generate()
   }
 
-  @Watch('open', { immediate: true })
+  @Watch('open')
   async onOpenChange() {
     await this.generate()
   }

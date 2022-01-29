@@ -78,7 +78,7 @@
 
       <v-divider />
 
-      <v-list-item>
+      <v-list-item @click='logout'>
         <v-list-item-icon>
           <v-icon>
             logout
@@ -96,6 +96,7 @@
 <script lang='ts'>
 import Vue from 'vue'
 import Component from 'vue-class-component'
+import { invoke } from '@tauri-apps/api/tauri'
 
 @Component({
   name: 'NavigationDrawer'
@@ -118,6 +119,19 @@ export default class NavigationDrawerComponent extends Vue {
 
   openGenerator() {
     this.$store.commit('generator/trigger')
+  }
+
+  async logout() {
+    await invoke('logout')
+    .then(() => {
+      this.$router.push('/')
+      this.$store.commit('auth/logout')
+      this.$store.commit('snackbar/emitSnackbar', {
+        color: 'success',
+        text: 'Logout completed',
+        outlined: true
+      })
+    })
   }
 }
 </script>

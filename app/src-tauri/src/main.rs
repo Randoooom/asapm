@@ -28,6 +28,7 @@ fn main() {
     .invoke_handler(generate_handler![
       commands::authentication::login,
       commands::authentication::signup,
+      commands::authentication::logout,
       commands::password::new_password,
       commands::password::get_passwords,
       commands::password::update_password,

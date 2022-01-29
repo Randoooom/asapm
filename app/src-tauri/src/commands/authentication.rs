@@ -57,3 +57,8 @@ pub fn signup(data: UserData, state: State<'_, UserState>, handle: AppHandle<Wry
     Err(_) => Err(())
   }
 }
+
+#[command]
+pub fn logout(state: State<'_, UserState>) {
+  *state.0.lock().unwrap() = None;
+}
