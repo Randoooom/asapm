@@ -48,7 +48,7 @@
                 </v-list-item-content>
 
                 <v-list-item-icon>
-                  <a v-if='password.url && password.url.length !== 0' :href='password.url' target='_blank' @click=''>
+                  <a v-if='password.url && password.url.length !== 0' :href='password.url' target='_blank' @click='confirmOpen'>
                     <v-icon color='white' small>
                       link
                     </v-icon>
@@ -94,6 +94,10 @@ export default class DashboardComponent extends mixins(PasswordUtil) {
 
   get passwords() {
     return this.$store.state.password.passwords
+  }
+
+  confirmOpen() {
+    this.$store.commit('snackbar/emitSnackbar', { color: 'success', outlined: true, text: 'Link opened in default browser' })
   }
 }
 </script>
