@@ -92,6 +92,7 @@ export default class SignupComponent extends mixins(FormValidator) {
     return await invoke('signup', { data: this.data })
       .then(() => {
         this.processing = false
+        this.$store.commit('auth/login')
         this.$router.push('/user/dashboard')
       })
       .catch(() => {

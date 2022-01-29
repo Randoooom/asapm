@@ -34,6 +34,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use crate::model::backup::Backup;
 use crate::model::encryption::{Encryption, EncryptionError};
+use crate::model::generator::PasswordGenerator;
 
 #[derive(Deserialize, Serialize)]
 pub struct UserData {
@@ -96,6 +97,8 @@ pub struct User {
   password: RawUserPassword,
   // must be decrypted and decoded
   passwords: Vec<PasswordType>,
+  // the default generator for the user
+  generator: PasswordGenerator,
 }
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -117,6 +120,7 @@ pub struct RawUser {
   password: RawUserPassword,
   // base64 encoded and encrypted
   passwords: Vec<Password>,
+  generator: PasswordGenerator,
 }
 
 impl RawUser {
@@ -151,10 +155,10 @@ impl From<&User> for RawUser {
       // encrypt
       let encrypted = user.encryption.clone().unwrap().encrypt(raw.as_str()).unwrap();
 
-        Password {
-          iv: encrypted.nonce,
-          data: encrypted.ciphertext,
-        }
+      Password {
+        iv: encrypted.nonce,
+        data: encrypted.ciphertext,
+      }
     }).collect::<Vec<Password>>();
 
     Self {
@@ -162,6 +166,7 @@ impl From<&User> for RawUser {
       backup: user.backup(),
       password: user.password.clone(),
       passwords,
+      generator: user.generator(),
     }
   }
 }
@@ -170,6 +175,16 @@ impl User {
   /// get the username
   pub fn username(&self) -> String {
     self.username.clone()
+  }
+
+  /// get the generator
+  pub fn generator(&self) -> PasswordGenerator {
+    self.generator.clone()
+  }
+
+  /// update the default generator
+  pub fn update_generator(&mut self, generator: PasswordGenerator) {
+    self.generator = generator
   }
 
   /// create new user from signup information
@@ -211,6 +226,7 @@ impl User {
             salt: hash_salt.to_string(),
           },
           passwords: Vec::new(),
+          generator: PasswordGenerator::default(),
         };
 
         // save the data
@@ -264,6 +280,7 @@ impl User {
             encryption: Some(encryption),
             password: raw.password,
             passwords,
+            generator: raw.generator,
           }
         )
       }
@@ -287,7 +304,7 @@ impl User {
       url: None,
       description: None,
       uuid: Uuid::new_v4().to_string(),
-      name: Some("Unnamed".to_string())
+      name: Some("Unnamed".to_string()),
     };
 
     // push the new password

@@ -23,16 +23,27 @@
  * SOFTWARE.
  */
 
-import Vue from 'vue'
-import Component from 'vue-class-component'
+export const state = () => ({
+  dialog: false,
+  text: '',
+  callback: () => {}
+})
 
-@Component
-export default class FormValidator extends Vue {
-  get required() {
-    return (data: string) => !!data || 'Required!'
-  }
+export const mutations = {
+  /**
+   * start new confirmation dialog
+   * @param state
+   * @param callback the callback to trigger on confirmation
+   * @param text the content of the dialog text
+   */
 
-  confirmAction(options: any) {
-    return this.$store.commit('confirmation/emitDialog', options)
+  emitDialog(state, { callback = () => {}, text = 'Please confirm this action' }) {
+    state.text = text
+    state.callback = callback
+    state.dialog = true
+  },
+
+  setDialog(state, dialog = false) {
+    state.dialog = dialog
   }
 }

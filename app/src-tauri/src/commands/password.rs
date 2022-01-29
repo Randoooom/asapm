@@ -62,10 +62,23 @@ pub fn update_password(data: PasswordData, state: State<'_, UserState>, handle: 
       // save data
       match user.write(&app_dir(&*handle.config()).unwrap()) {
         Ok(()) => Ok(()),
-        Err(error) => {
-          println!("{:?}", error);
-          Err(())
-        }
+        Err(_) => Err(())
+      }
+    }
+    None => Err(())
+  }
+}
+
+#[command]
+pub fn delete_password(data: PasswordData, state: State<'_, UserState>, handle: AppHandle<Wry>) -> Result<(), ()> {
+  // get the user
+  match &mut *state.0.lock().unwrap() {
+    Some(user) => {
+      user.delete_password(data);
+      // save data
+      match user.write(&app_dir(&*handle.config()).unwrap()) {
+        Ok(()) => Ok(()),
+        Err(_) => Err(())
       }
     }
     None => Err(())

@@ -25,14 +25,43 @@
 
 import Vue from 'vue'
 import Component from 'vue-class-component'
+import { invoke } from '@tauri-apps/api/tauri'
 
 @Component
-export default class FormValidator extends Vue {
-  get required() {
-    return (data: string) => !!data || 'Required!'
+export default class PasswordUtil extends Vue {
+  /**
+   * copy the selected password into the clipboard
+   * @param password
+   */
+  async copyPassword(password: any) {
+    // copy the password
+    await this.$copyText(password.password)
+      .then(async () => await this.$store.commit('snackbar/emitSnackbar', {
+        color: 'success',
+        text: 'Password copied',
+        outlined: true
+      }))
+      // handle empty password
+      .catch(async () => await this.$store.commit('snackbar/emitSnackbar', {
+        color: 'error',
+        text: 'Password is empty'
+      }))
   }
 
-  confirmAction(options: any) {
-    return this.$store.commit('confirmation/emitDialog', options)
+  /**
+   * edit the default generator settings
+   * @param letters
+   * @param numbers
+   * @param symbols
+   */
+  async updateGenerator({ letters = true, numbers = true, symbols = true }) {
+  }
+
+  /**
+   * generate new password from the default generator
+   */
+  async generatePassword(length: number): Promise<string> {
+    return await invoke('generate_password', { length })
+      .then(value => value as string)
   }
 }

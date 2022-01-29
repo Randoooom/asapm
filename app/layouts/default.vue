@@ -26,6 +26,12 @@
 <template>
   <v-app>
     <nuxt class='mt-8' />
+
+    <v-snackbar v-model='snackbar' :color='options.color' :outlined='options.outlined' timeout='1000'>
+        {{ options.text }}
+    </v-snackbar>
+
+    <confirmation-dialog />
   </v-app>
 </template>
 
@@ -36,7 +42,19 @@ import Component from 'vue-class-component'
 @Component({
   name: 'Default',
 })
-export default class DefaultLayout extends Vue {}
+export default class DefaultLayout extends Vue {
+  get snackbar() {
+    return this.$store.state.snackbar.active
+  }
+
+  get options() {
+    return this.$store.state.snackbar
+  }
+
+  set snackbar(active: boolean) {
+    this.$store.commit('snackbar/setActive', active)
+  }
+}
 </script>
 
 <style lang='sass'>

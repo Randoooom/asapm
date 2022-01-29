@@ -23,16 +23,30 @@
  * SOFTWARE.
  */
 
-import Vue from 'vue'
-import Component from 'vue-class-component'
+export const state = ({
+  active: false,
+  text: '',
+  color: '',
+  outlined: false
+})
 
-@Component
-export default class FormValidator extends Vue {
-  get required() {
-    return (data: string) => !!data || 'Required!'
-  }
+export const mutations = {
+  /**
+   * activate a global snackbar
+   * @param state
+   * @param text the display content
+   * @param color the color
+   * @param outlined
+   */
 
-  confirmAction(options: any) {
-    return this.$store.commit('confirmation/emitDialog', options)
+  emitSnackbar(state, { text, color = 'primary', outlined = false }) {
+    state.active = true
+    state.text = text
+    state.color = color
+    state.outlined = outlined
+  },
+
+  setActive(state, active = false) {
+    state.active = active
   }
 }

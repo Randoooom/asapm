@@ -35,10 +35,10 @@
       </v-card-title>
 
       <v-card-text>
-        <v-list>
+        <v-list flat>
           <v-list-item-group>
             <template v-for='password in passwords'>
-              <v-list-item :key='password.uuid' @click='editPassword(password)'>
+              <v-list-item :key='password.uuid' @click.native='editPassword(password)'>
                 <v-list-item-title>
                   {{ password.name }}
                 </v-list-item-title>
@@ -46,6 +46,12 @@
                 <v-list-item-content>
                   {{ password.login }}
                 </v-list-item-content>
+
+                <v-list-item-icon>
+                  <v-icon small @click.prevent='copyPassword(password)'>
+                    content_copy
+                  </v-icon>
+                </v-list-item-icon>
               </v-list-item>
               <v-divider :key='password.uuid' />
             </template>
@@ -57,8 +63,8 @@
 </template>
 
 <script lang='ts'>
-import Vue from 'vue'
-import Component from 'vue-class-component'
+import Component, { mixins } from 'vue-class-component'
+import PasswordUtil from '~/mixins/PasswordUtil'
 
 @Component({
   name: 'Dashboard',
@@ -66,7 +72,7 @@ import Component from 'vue-class-component'
     'password-dialog': () => import('~/components/password/PasswordDialog.vue')
   }
 })
-export default class DashboardComponent extends Vue {
+export default class DashboardComponent extends mixins(PasswordUtil) {
   dialog: boolean = false
 
   async mounted() {

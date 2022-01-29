@@ -24,15 +24,6 @@
  */
 
 import Vue from 'vue'
-import Component from 'vue-class-component'
+import VueClipboard from 'vue-clipboard2'
 
-@Component
-export default class FormValidator extends Vue {
-  get required() {
-    return (data: string) => !!data || 'Required!'
-  }
-
-  confirmAction(options: any) {
-    return this.$store.commit('confirmation/emitDialog', options)
-  }
-}
+Vue.use(VueClipboard)

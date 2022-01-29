@@ -23,52 +23,36 @@
  * SOFTWARE.
  */
 
-use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, command, State, Wry};
+use crate::{User, UserState};
+use crate::model::generator::PasswordGenerator;
 
-#[derive(Deserialize, Serialize, Clone)]
-pub struct PasswordGenerator {
-  numbers: bool,
-  letters: bool,
-  symbols: bool,
-}
-
-impl Default for PasswordGenerator {
-  fn default() -> Self {
-    Self {
-      numbers: true,
-      letters: true,
-      symbols: true,
+#[command]
+pub fn update_generator(state: State<'_, UserState>, generator: PasswordGenerator) -> Result<(), ()> {
+  // get the user
+  match &mut *state.0.lock().unwrap() {
+    Some(user) => {
+      user.update_generator(generator);
+      Ok(())
     }
+    None => Err(())
   }
 }
 
-impl PasswordGenerator {
-  pub fn generate(&self, length: usize) -> String {
-    // setup dataset
-    let mut dataset = String::from("");
-    // add letters
-    if self.letters {
-      dataset.push_str("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-    }
-    // add numbers
-    if self.numbers {
-      dataset.push_str("0123456789")
-    }
-    // add symbols
-    if self.symbols {
-      dataset.push_str("!@#$%^&*()-_+/")
-    }
-
-    // parse to char vec
-    let dataset = dataset.chars().collect::<Vec<char>>();
-
-    // generate random numbers
-    let numbers = (0..length).map(|_| { rand::random::<u8>() }).collect::<Vec<u8>>();
-
-    // iter through the numbers and add push the matching char into the password
-    let password = numbers.iter().map(|number| { dataset[*number as usize % &dataset.len()] }).collect::<String>();
-
-    password
+#[command]
+pub fn get_generator(state: State<'_, UserState>) -> Result<PasswordGenerator, ()> {
+  // get the user
+  match &mut *state.0.lock().unwrap() {
+    Some(user) => Ok(user.generator()),
+    None => Err(())
   }
 }
 
+#[command]
+pub fn generate_password(state: State<'_, UserState>, length: usize) -> Result<String, ()> {
+  // get the user
+  match &mut *state.0.lock().unwrap() {
+    Some(user) => Ok(user.generator().generate(length)),
+    None => Err(())
+  }
+}

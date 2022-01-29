@@ -24,67 +24,59 @@
   -->
 
 <template>
-  <v-container class='justify-center align-center d-flex'>
-    <v-card class='pt-5 pb-5' max-width='400px' width='100%'>
-      <v-card-title class='d-block text-center'>
-        Login
+  <v-dialog v-if='active' v-model='active' max-width='500px'>
+    <v-card>
+      <v-card-title>
+        Confirm action
       </v-card-title>
 
       <v-card-text>
-        <v-alert v-if='error' type='error'>
-          Believe in yourself, maybe you can do it!
-        </v-alert>
-
-        <v-text-field v-model='loginData.username' label='Username' filled />
-        <v-text-field v-model='loginData.password' :append-icon="show ? 'mdi-eye' : 'mdi-eye-off'"
-                      filled :type='show ? "text" : "password"' label='Password'
-                      @click:append='show = !show' />
-
-        <nuxt-link to='/signup'>
-          Create new account
-        </nuxt-link>
+        {{ text }}
       </v-card-text>
 
       <v-card-actions>
-        <v-btn text color='primary' :loading='processing' @click='login'>
-          Login
+        <v-btn outlined color='red' @click='execute'>
+          Confirm
+        </v-btn>
+
+        <v-spacer />
+
+        <v-btn text color='primary' @click='active = false'>
+          Cancel
         </v-btn>
       </v-card-actions>
     </v-card>
-  </v-container>
+  </v-dialog>
 </template>
 
 <script lang='ts'>
 import Vue from 'vue'
 import Component from 'vue-class-component'
-import { invoke } from '@tauri-apps/api/tauri'
 
 @Component({
-  name: 'Index',
+  name: 'ConfirmationDialog'
 })
-export default class IndexComponent extends Vue {
-  show: boolean = false
-  error: boolean = false
-  processing: boolean = false
 
-  loginData = {
-    username: '',
-    password: ''
+export default class ConfirmationDialogComponent extends Vue {
+  execute() {
+    this.callback()
+    this.active = false
   }
 
-  async login() {
-    this.processing = true
+  get active() {
+    return this.$store.state.confirmation.dialog
+  }
 
-    await invoke('login', { data: this.loginData })
-    .then(() => {
-      this.$router.push('/user/dashboard')
-      this.$store.commit('auth/login')
-      this.processing = false
-    })
-    .catch(() => {
-      this.error = true
-      this.processing = false
-    })
+  set active(dialog: boolean) {
+    this.$store.commit('confirmation/setDialog', dialog)
+  }
+
+  get text() {
+    return this.$store.state.confirmation.text
+  }
+
+  get callback() {
+    return this.$store.state.confirmation.callback
   }
 }
 </script>

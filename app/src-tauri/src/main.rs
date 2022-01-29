@@ -31,6 +31,10 @@ fn main() {
       commands::password::new_password,
       commands::password::get_passwords,
       commands::password::update_password,
+      commands::password::delete_password,
+      commands::generator::update_generator,
+      commands::generator::get_generator,
+      commands::generator::generate_password,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

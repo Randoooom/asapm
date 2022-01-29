@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-export default function ({ store, route, redirect }) {
+export default function({ store, route, redirect }) {
   // get loggedIn state
   const loggedIn = store.state.auth.loggedIn
 
@@ -31,6 +31,6 @@ export default function ({ store, route, redirect }) {
   if (!loggedIn) return
 
   // check the route and redirect
-  const needsRedirect = !route.fullPath.startsWith('user')
+  const needsRedirect = ['/', '/signup'].filter(item => route.fullPath.toLowerCase() === item).length > 0
   if (needsRedirect) return redirect('/user/dashboard')
 }
