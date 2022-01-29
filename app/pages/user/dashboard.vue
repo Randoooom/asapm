@@ -39,7 +39,13 @@
           <v-list-item-group>
             <template v-for='password in passwords'>
               <v-list-item :key='password.uuid'>
-                <v-list-item-title @click='editPassword(password)'>
+                <v-list-item-avatar tile color='transparent'>
+                  <v-icon small @click='editPassword(password)'>
+                    edit
+                  </v-icon>
+                </v-list-item-avatar>
+
+                <v-list-item-title>
                   {{ password.name }}
                 </v-list-item-title>
 
@@ -48,13 +54,16 @@
                 </v-list-item-content>
 
                 <v-list-item-icon>
-                  <a v-if='password.url && password.url.length !== 0' :href='password.url' target='_blank' @click='confirmOpen'>
+                  <a v-if='password.url && password.url.length !== 0' :href='password.url' target='_blank'
+                     @click='confirmOpen'>
                     <v-icon color='white' small>
                       link
                     </v-icon>
                   </a>
+                </v-list-item-icon>
 
-                  <v-icon class='ml-3' small @click.prevent='copyPassword(password)'>
+                <v-list-item-icon>
+                  <v-icon small @click.prevent='copyPassword(password)'>
                     content_copy
                   </v-icon>
                 </v-list-item-icon>
@@ -97,7 +106,11 @@ export default class DashboardComponent extends mixins(PasswordUtil) {
   }
 
   confirmOpen() {
-    this.$store.commit('snackbar/emitSnackbar', { color: 'success', outlined: true, text: 'Link opened in default browser' })
+    this.$store.commit('snackbar/emitSnackbar', {
+      color: 'success',
+      outlined: true,
+      text: 'Link opened in default browser'
+    })
   }
 }
 </script>
