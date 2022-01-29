@@ -64,15 +64,15 @@
         </v-list-item-title>
       </v-list-item>
 
-      <v-list-item>
+      <v-list-item @click='changeTheme'>
         <v-list-item-icon>
           <v-icon>
-            settings
+            {{ dark ? 'light_mode' : 'dark_mode' }}
           </v-icon>
         </v-list-item-icon>
 
         <v-list-item-title>
-          Settings
+          Switch theme
         </v-list-item-title>
       </v-list-item>
 
@@ -131,6 +131,21 @@ export default class NavigationDrawerComponent extends Vue {
         text: 'Logout completed',
         outlined: true
       })
+    })
+  }
+
+  get dark() {
+    // @ts-ignore
+    return this.$vuetify.theme.dark
+  }
+
+  changeTheme() {
+    // @ts-ignore
+    this.$vuetify.theme.dark = !this.dark
+    this.$store.commit('snackbar/emitSnackbar', {
+      color: 'success',
+      text: 'Changed theme',
+      outlined: true
     })
   }
 }
