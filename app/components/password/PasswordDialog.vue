@@ -45,6 +45,10 @@
             <v-text-field v-model='password.login' :readonly='!editable' type='text' label='Login' filled />
           </v-col>
 
+          <v-col cols='12'>
+            <v-textarea v-model='password.description' :readonly='!editable' label='Description' rows='3' filled />
+          </v-col>
+
           <v-col cols='12' sm='6' md='6'>
             <v-text-field v-model='password.password' :disabled='!editable' label='Password' filled :append-icon="show ? 'mdi-eye' : 'mdi-eye-off'"
                           :type='show ? "text" : "password"'
