@@ -84,3 +84,11 @@ pub fn delete_password(data: PasswordData, state: State<'_, UserState>, handle: 
     None => Err(())
   }
 }
+
+#[command]
+pub fn password_strength(password: String) -> Result<u8, ()> {
+  match zxcvbn::zxcvbn(password.as_str(), &[]) {
+    Ok(entropy) => Ok(entropy.score()),
+    Err(_) => Err(())
+  }
+}

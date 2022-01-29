@@ -26,6 +26,7 @@ thiserror = "1.0.30"
 matchit = "0.4.4"
 futures = "0.3.19"
 base64 = "0.13.0"
+zxcvbn = "2.1.2"
 
 [features]
 default = ["custom-protocol"]

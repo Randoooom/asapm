@@ -46,10 +46,10 @@
           </v-col>
 
           <v-col cols='12' sm='6' md='6'>
-            <v-text-field v-model='password.password' :disabled='!editable' label='Password' filled
-                          :append-icon="show ? 'mdi-eye' : 'mdi-eye-off'"
+            <v-text-field v-model='password.password' :disabled='!editable' label='Password' filled :append-icon="show ? 'mdi-eye' : 'mdi-eye-off'"
                           :type='show ? "text" : "password"'
-                          :rules='[required]' @click:append='show = !show' />
+                          :rules='[required]'
+                          :hint='strength' @input='onPasswordInput' @click:append='show = !show' />
           </v-col>
 
           <v-col cols='12' sm='6' md='6'>
@@ -93,7 +93,7 @@ import PasswordUtil from '~/mixins/PasswordUtil'
 export default class PasswordDialogComponent extends mixins(FormValidator, PasswordUtil) {
   show: boolean = false
   editMode: boolean = false
-  test: string = ' '
+  strength: string = ''
 
   get editable() {
     // auto allow edit while creating new password
@@ -111,6 +111,14 @@ export default class PasswordDialogComponent extends mixins(FormValidator, Passw
 
   @Prop({ type: Boolean, required: true })
   value!: boolean
+
+  @Watch('password', { deep: true })
+  async onPasswordInput(password: any) {
+    if (!password?.password && typeof password !== 'string') return
+    const data = typeof password === 'string' ? password : password.password
+
+    this.strength = await this.getPasswordStrength(data).then(value => value)
+  }
 
   @Watch('value')
   onValueChange(value: boolean) {

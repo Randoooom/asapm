@@ -32,6 +32,7 @@ fn main() {
       commands::password::get_passwords,
       commands::password::update_password,
       commands::password::delete_password,
+      commands::password::password_strength,
       commands::generator::update_generator,
       commands::generator::get_generator,
       commands::generator::generate_password,

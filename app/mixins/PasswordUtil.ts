@@ -64,4 +64,22 @@ export default class PasswordUtil extends Vue {
     return await invoke('generate_password', { length })
       .then(value => value as string)
   }
+
+  /**
+   * get the strength of the given password
+   * @param password
+   */
+  async getPasswordStrength(password: String): Promise<string> {
+    if (password.length === 0) return "Blank"
+
+    switch (await invoke('password_strength', { password }).then(score => score as number)) {
+      case 0: return "Very weak"
+      case 1: return "Weak"
+      case 2: return "Medium"
+      case 3: return "Strong"
+      case 4: return "Very strong"
+      default: return "Error"
+    }
+  }
 }
+

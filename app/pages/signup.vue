@@ -40,9 +40,9 @@
         </v-alert>
 
         <v-text-field v-model='data.username' filled label='Username' :rules='[required]' />
-        <v-text-field v-model='data.password' :append-icon="show ? 'mdi-eye' : 'mdi-eye-off'"
+        <v-text-field v-model='data.password' full-width width='100%' :append-icon="show ? 'mdi-eye' : 'mdi-eye-off'"
                       filled :type='show ? "text" : "password"' label='Password'
-                      :rules='[required]' @click:append='show = !show' />
+                      :rules='[required]' :hint='strength' @click:append='show = !show' />
         <v-text-field v-model='confirm' :rules='[matchPassword, required]'
                       :append-icon="show ? 'mdi-eye' : 'mdi-eye-off'"
                       filled :type='show ? "text" : "password"' label='Confirm password'
@@ -67,16 +67,24 @@
 <script lang='ts'>
 import Component, { mixins } from 'vue-class-component'
 import { invoke } from '@tauri-apps/api/tauri'
+import { Watch } from 'vue-property-decorator'
 import FormValidator from '~/mixins/FormValidator'
+import PasswordUtil from '~/mixins/PasswordUtil'
 
 @Component({
   name: 'Signup'
 })
-export default class SignupComponent extends mixins(FormValidator) {
+export default class SignupComponent extends mixins(FormValidator, PasswordUtil) {
   show: boolean = false
   confirm: string = ''
   processing: boolean = false
   error: boolean = false
+  strength: string = ''
+
+  @Watch('data.password')
+  async onPasswordChange(password: string) {
+    this.strength = await this.getPasswordStrength(password).then(value => value)
+  }
 
   get matchPassword() {
     return (confirm: string) => confirm === this.data.password || 'Does not match!'
@@ -102,3 +110,9 @@ export default class SignupComponent extends mixins(FormValidator) {
   }
 }
 </script>
+
+
+<style lang='sass' scoped>
+.v-input__control
+  width: 100%
+</style>
