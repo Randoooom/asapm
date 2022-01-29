@@ -26,13 +26,9 @@
 <template>
   <v-bottom-sheet v-model='open'>
     <v-card>
-      <v-card-title>
-        Generator
-      </v-card-title>
-
       <v-card-text>
         <v-container>
-          <v-otp-input v-model='password' color='secondary' class='mt-5 mb-16' :length='data.length' readonly @click='copyPassword({ password })' />
+          <v-otp-input v-model='password' color='secondary' class='mt-8 mb-16' :length='data.length' readonly @click='copyPassword({ password })' />
 
           <v-slider v-model='data.length' label='Length' prepend-icon='straighten' thumb-label='always' ticks min='12'
                     max='36' />
