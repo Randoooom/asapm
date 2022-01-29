@@ -16,7 +16,7 @@ pub struct UserState(Arc<Mutex<Option<User>>>);
 
 fn main() {
   tauri::Builder::default()
-    .setup(| app | {
+    .setup(|app| {
       let path = app_dir(&*app.config()).unwrap();
       // create directory if does not exist
       fs::create_dir_all(path.as_path()).unwrap();
