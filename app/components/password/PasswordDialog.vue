@@ -62,7 +62,7 @@
             </v-btn>
 
             <v-btn :disabled='!editable' height='56px' class='ml-3' outlined color='primary' @click='generate'>
-              Regenrate from generator
+              Generate from generator
             </v-btn>
           </v-col>
         </v-row>
