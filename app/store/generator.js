@@ -23,44 +23,32 @@
  * SOFTWARE.
  */
 
-import { invoke } from '@tauri-apps/api/tauri'
-
 export const state = () => ({
-  currentPassword: undefined,
-  passwords: [],
+  open: false,
+  default: {
+    numbers: true,
+    letters: true,
+    symbols: true,
+    length: 32
+  }
 })
 
 export const mutations = {
   /**
-   * update the currentPassword
+   * trigger the bottom sheet for the generator
    * @param state
-   * @param password
    */
-  pushPassword(state, password) {
-    state.currentPassword = password
+  trigger(state) {
+    state.open = !state.open
   },
 
   /**
-   * set the password list
+   * update the default generator
    * @param state
-   * @param passwords
+   * @param generator
    */
-  setPasswords(state, passwords) {
-    state.passwords = passwords
-  },
-}
 
-export const actions = {
-  /**
-   * fetch the data from tauri
-   */
-  async fetchData({ commit }) {
-    // invoke command
-    await invoke('get_passwords')
-      .then((passwords) => commit('setPasswords', passwords))
-
-    // also handle the generator
-    await invoke('get_generator')
-      .then((generator) => commit('generator/setDefault', generator, { root: true }))
-  },
+  setDefault(state, generator) {
+    state.default = generator
+  }
 }

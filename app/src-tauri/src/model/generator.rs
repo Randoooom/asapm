@@ -30,6 +30,7 @@ pub struct PasswordGenerator {
   numbers: bool,
   letters: bool,
   symbols: bool,
+  length: usize,
 }
 
 impl Default for PasswordGenerator {
@@ -38,32 +39,42 @@ impl Default for PasswordGenerator {
       numbers: true,
       letters: true,
       symbols: true,
+      length: 32,
     }
   }
 }
 
 impl PasswordGenerator {
-  pub fn generate(&self, length: usize) -> String {
+  pub fn generate(&self, generator: Option<Self>) -> String {
+    let generator = match generator {
+      Some(generator) => generator,
+      None => self.clone()
+    };
+
     // setup dataset
     let mut dataset = String::from("");
     // add letters
-    if self.letters {
+    if generator.letters {
       dataset.push_str("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
     }
     // add numbers
-    if self.numbers {
+    if generator.numbers {
       dataset.push_str("0123456789")
     }
     // add symbols
-    if self.symbols {
+    if generator.symbols {
       dataset.push_str("!@#$%^&*()-_+/")
     }
 
     // parse to char vec
     let dataset = dataset.chars().collect::<Vec<char>>();
 
+    if dataset.len() == 0 {
+      return String::from("")
+    }
+
     // generate random numbers
-    let numbers = (0..length).map(|_| { rand::random::<u8>() }).collect::<Vec<u8>>();
+    let numbers = (0..generator.length).map(|_| { rand::random::<u8>() }).collect::<Vec<u8>>();
 
     // iter through the numbers and add push the matching char into the password
     let password = numbers.iter().map(|number| { dataset[*number as usize % &dataset.len()] }).collect::<String>();

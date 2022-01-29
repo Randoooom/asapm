@@ -49,19 +49,10 @@ export default class PasswordUtil extends Vue {
   }
 
   /**
-   * edit the default generator settings
-   * @param letters
-   * @param numbers
-   * @param symbols
+   * generate new password from the generator
    */
-  async updateGenerator({ letters = true, numbers = true, symbols = true }) {
-  }
-
-  /**
-   * generate new password from the default generator
-   */
-  async generatePassword(length: number): Promise<string> {
-    return await invoke('generate_password', { length })
+  async generatePassword(generator: { length: number, symbols: boolean, letters: boolean, numbers: boolean } | null = null): Promise<string> {
+    return await invoke('generate_password', { generator })
       .then(value => value as string)
   }
 
@@ -70,15 +61,21 @@ export default class PasswordUtil extends Vue {
    * @param password
    */
   async getPasswordStrength(password: String): Promise<string> {
-    if (password.length === 0) return "Blank"
+    if (password.length === 0) return 'Blank'
 
     switch (await invoke('password_strength', { password }).then(score => score as number)) {
-      case 0: return "Very weak"
-      case 1: return "Weak"
-      case 2: return "Medium"
-      case 3: return "Strong"
-      case 4: return "Very strong"
-      default: return "Error"
+      case 0:
+        return 'Very weak'
+      case 1:
+        return 'Weak'
+      case 2:
+        return 'Medium'
+      case 3:
+        return 'Strong'
+      case 4:
+        return 'Very strong'
+      default:
+        return 'Error'
     }
   }
 }

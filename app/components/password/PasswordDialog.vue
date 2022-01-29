@@ -149,11 +149,11 @@ export default class PasswordDialogComponent extends mixins(FormValidator, Passw
   }
 
   /**
-   * generate a new password from the default generator with the length of 32
+   * generate a new password from the default generator
    */
   async generate() {
     this.password = Object.assign(this.password,
-      { password: await this.generatePassword(32).then(value => value).catch(() => 'bad') }
+      { password: await this.generatePassword(null).then(value => value).catch(() => 'bad') }
     )
   }
 

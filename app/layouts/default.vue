@@ -25,10 +25,12 @@
 
 <template>
   <v-app>
+    <navigation-drawer />
     <nuxt class='mt-8' />
+    <password-generator />
 
     <v-snackbar v-model='snackbar' :color='options.color' :outlined='options.outlined' timeout='1000'>
-        {{ options.text }}
+      {{ options.text }}
     </v-snackbar>
 
     <confirmation-dialog />
@@ -41,6 +43,10 @@ import Component from 'vue-class-component'
 
 @Component({
   name: 'Default',
+  components: {
+    'navigation-drawer': () => import('~/components/layout/NavigationDrawer.vue'),
+    'password-generator': () => import('~/components/password/PasswordGenerator.vue'),
+  }
 })
 export default class DefaultLayout extends Vue {
   get snackbar() {

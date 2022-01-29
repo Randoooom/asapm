@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-export const state = ({
+export const state = () => ({
   active: false,
   text: '',
   color: '',

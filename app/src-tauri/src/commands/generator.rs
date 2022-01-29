@@ -24,16 +24,21 @@
  */
 
 use tauri::{AppHandle, command, State, Wry};
+use tauri::api::path::app_dir;
 use crate::{User, UserState};
 use crate::model::generator::PasswordGenerator;
 
 #[command]
-pub fn update_generator(state: State<'_, UserState>, generator: PasswordGenerator) -> Result<(), ()> {
+pub fn update_generator(state: State<'_, UserState>, generator: PasswordGenerator, handle: AppHandle<Wry>) -> Result<(), ()> {
   // get the user
   match &mut *state.0.lock().unwrap() {
     Some(user) => {
       user.update_generator(generator);
-      Ok(())
+      // save
+      match user.write(&app_dir(&*handle.config()).unwrap()) {
+        Ok(()) => Ok(()),
+        Err(_) => Err(())
+      }
     }
     None => Err(())
   }
@@ -49,10 +54,10 @@ pub fn get_generator(state: State<'_, UserState>) -> Result<PasswordGenerator, (
 }
 
 #[command]
-pub fn generate_password(state: State<'_, UserState>, length: usize) -> Result<String, ()> {
+pub fn generate_password(state: State<'_, UserState>, generator: Option<PasswordGenerator>) -> Result<String, ()> {
   // get the user
   match &mut *state.0.lock().unwrap() {
-    Some(user) => Ok(user.generator().generate(length)),
+    Some(user) => Ok(user.generator().generate(generator)),
     None => Err(())
   }
 }
