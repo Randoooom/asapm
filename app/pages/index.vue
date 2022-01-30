@@ -24,7 +24,7 @@
   -->
 
 <template>
-  <v-container class='justify-center align-center d-flex'>
+  <v-container id='login' class='justify-center align-center d-flex'>
     <v-card class='pt-5 pb-5' max-width='400px' width='100%'>
       <v-card-title class='d-block text-center'>
         Login
@@ -88,3 +88,8 @@ export default class IndexComponent extends Vue {
   }
 }
 </script>
+
+<style lang='sass' scoped>
+#login
+  height: calc(100vh - 32px - 12px)
+</style>

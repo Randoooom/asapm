@@ -24,7 +24,7 @@
   -->
 
 <template>
-  <v-container class='justify-center align-center d-flex'>
+  <v-container id='signup' class='justify-center align-center d-flex'>
     <v-card class='pt-5 pb-5' max-width='400px' width='100%'>
       <v-card-title class='d-block text-center'>
         Account creation
@@ -113,6 +113,9 @@ export default class SignupComponent extends mixins(FormValidator, PasswordUtil)
 
 
 <style lang='sass' scoped>
+#signup
+  height: calc(100vh - 32px - 12px)
+
 .v-input__control
   width: 100%
 </style>
