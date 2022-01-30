@@ -37,6 +37,17 @@ use crate::model::encryption::{Encryption, EncryptionError};
 use crate::model::generator::PasswordGenerator;
 
 #[derive(Deserialize, Serialize)]
+pub struct AnalyseResult {
+  // vec of the matching uuids
+  reused: Vec<String>,
+  very_strong: Vec<String>,
+  strong: Vec<String>,
+  medium: Vec<String>,
+  weak: Vec<String>,
+  very_weak: Vec<String>,
+}
+
+#[derive(Deserialize, Serialize)]
 pub struct UserData {
   username: String,
   password: String,
@@ -334,6 +345,49 @@ impl User {
       }
       true
     }).collect::<Vec<PasswordType>>();
+  }
+
+  pub fn analyse_passwords(&self) -> AnalyseResult {
+    // init vectors
+    let mut reused = Vec::new();
+    let mut very_strong = Vec::new();
+    let mut strong = Vec::new();
+    let mut medium = Vec::new();
+    let mut weak = Vec::new();
+    let mut very_weak = Vec::new();
+
+    self.passwords.clone().into_iter().for_each(|ty| {
+      if let PasswordType::Data(password) = ty.clone() {
+        self.passwords.clone().into_iter().for_each(|cty| {
+          if let PasswordType::Data(compare) = cty.clone() {
+            if compare.password.as_ref().unwrap().eq(password.password.as_ref().unwrap()) && !compare.uuid.eq(&password.uuid) {
+              reused.push(compare.uuid.clone());
+              reused.push(password.uuid.clone());
+            }
+          }
+        });
+
+        // sort by strength
+        match zxcvbn::zxcvbn(password.password.as_ref().unwrap().as_str(), &[]).unwrap().score() {
+          0 => very_weak.push(password.uuid.clone()),
+          1 => weak.push(password.uuid.clone()),
+          2 => medium.push(password.uuid.clone()),
+          3 => strong.push(password.uuid.clone()),
+          4 => very_strong.push(password.uuid.clone()),
+          // should never happen
+          _ => {}
+        }
+      }
+    });
+
+    AnalyseResult {
+      reused,
+      very_strong,
+      strong,
+      medium,
+      weak,
+      very_weak,
+    }
   }
 
   pub fn backup(&self) -> Option<Backup> {

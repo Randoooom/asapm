@@ -24,31 +24,51 @@
   -->
 
 <template>
-  <div class='justify-center align-center d-flex'>
-    <v-card flat tile color='transparent'>
-      <v-card-title>
-        <span class='text-h1 error--text font-weight-bold'>
-          Error {{ error.statusCode }}
-        </span>
-      </v-card-title>
+  <v-list flat>
+    <v-list-item-group>
+      <template v-for='password in passwords'>
+        <v-list-item :key='password.uuid'>
+          <v-list-item-title>
+            <v-chip :color='color'>
+              {{ filter.split('_').join(' ') }}
+            </v-chip>
 
-      <v-card-subtitle class='text-center'>
-        {{ error.message }}
-      </v-card-subtitle>
-    </v-card>
-  </div>
+            {{ password.name }}
+            <span v-if='password.login'>
+              - {{ password.login }}
+            </span>
+          </v-list-item-title>
+        </v-list-item>
+
+        <v-divider :key='password.uuid' />
+      </template>
+    </v-list-item-group>
+  </v-list>
 </template>
 
 <script lang='ts'>
-import Vue from 'vue'
-import Component from 'vue-class-component'
+import Component, { mixins } from 'vue-class-component'
 import { Prop } from 'vue-property-decorator'
+import PasswordUtil from '~/mixins/PasswordUtil'
 
 @Component({
-  name: 'Error'
+  name: 'AnalyticsList'
 })
-export default class ErrorLayout extends Vue {
-  @Prop({ type: Object, required: true })
-  error!: any
+
+export default class AnalyticsListComponent extends mixins(PasswordUtil) {
+  @Prop({ required: true })
+  filter!: string
+
+  @Prop({ required: true, type: String })
+  color!: string
+
+  get passwords() {
+    const passwords = this.$store.state.password.passwords
+    const analytics = this.$store.state.password.analytics
+
+    // make deep copy
+    return [...passwords].filter((password: any) => analytics[this.filter].includes(password.uuid)
+    )
+  }
 }
 </script>

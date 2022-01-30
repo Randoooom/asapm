@@ -28,6 +28,7 @@ import { invoke } from '@tauri-apps/api/tauri'
 export const state = () => ({
   currentPassword: undefined,
   passwords: [],
+  analytics: undefined
 })
 
 export const mutations = {
@@ -48,6 +49,16 @@ export const mutations = {
   setPasswords(state, passwords) {
     state.passwords = passwords
   },
+
+  /**
+   * set the password analytics
+   * @param state
+   * @param stats
+   */
+
+  setAnalytics(state, analytics) {
+    state.analytics = analytics
+  }
 }
 
 export const actions = {
@@ -62,5 +73,9 @@ export const actions = {
     // also handle the generator
     await invoke('get_generator')
       .then((generator) => commit('generator/setDefault', generator, { root: true }))
+
+    // get the analytics
+    await invoke('analyse')
+      .then((result) => commit('setAnalytics', result))
   },
 }

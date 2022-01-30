@@ -25,7 +25,7 @@
 
 use tauri::{AppHandle, command, State, Wry};
 use tauri::api::path::app_dir;
-use crate::model::user::{PasswordType, PasswordData};
+use crate::model::user::{PasswordType, PasswordData, AnalyseResult};
 use crate::{User, UserState};
 
 #[command]
@@ -90,5 +90,14 @@ pub fn password_strength(password: String) -> Result<u8, ()> {
   match zxcvbn::zxcvbn(password.as_str(), &[]) {
     Ok(entropy) => Ok(entropy.score()),
     Err(_) => Err(())
+  }
+}
+
+#[command]
+pub fn analyse(state: State<'_, UserState>) -> Result<AnalyseResult, ()> {
+  // get the user
+  match &*state.0.lock().unwrap() {
+    Some(user) => Ok(user.analyse_passwords()),
+    None => Err(())
   }
 }

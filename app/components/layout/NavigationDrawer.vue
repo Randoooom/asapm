@@ -40,7 +40,7 @@
     <v-divider />
 
     <v-list v-if='loggedIn'>
-      <v-list-item>
+      <v-list-item @click='$router.push("/user/dashboard")'>
         <v-list-item-icon>
           <v-icon>
             list
@@ -49,6 +49,18 @@
 
         <v-list-item-title>
           Passwords
+        </v-list-item-title>
+      </v-list-item>
+
+      <v-list-item @click='$router.push("/user/analytics")'>
+        <v-list-item-icon>
+          <v-icon>
+            analytics
+          </v-icon>
+        </v-list-item-icon>
+
+        <v-list-item-title>
+          Analytics
         </v-list-item-title>
       </v-list-item>
 
@@ -112,7 +124,7 @@ export default class NavigationDrawerComponent extends Vue {
 
   expand() {
     // only if logged in
-    if (!this.loggedIn) return
+    if (!this.loggedIn) return this.$router.push('/')
 
     this.mini = false
   }
