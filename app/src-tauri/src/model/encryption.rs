@@ -101,3 +101,36 @@ impl Encryption {
     )
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use pbkdf2::password_hash::{PasswordHasher, SaltString};
+  use pbkdf2::Pbkdf2;
+  use rand::rngs::OsRng;
+  use super::*;
+
+  #[test]
+  fn test_iv_length() {
+    let iv = Encryption::generate(8);
+    assert_eq!(base64::decode(iv).unwrap().len(), 8)
+  }
+
+  #[test]
+  fn test_key_length() {
+    let salt = SaltString::generate(&mut OsRng);
+    let hash = Pbkdf2.hash_password("test".to_string().as_bytes(), &salt).unwrap();
+    assert_eq!(hash.hash.unwrap().as_bytes().len(), 32)
+  }
+
+  #[test]
+  fn test_encryption() {
+    let salt = SaltString::new("mgtQBCKsArg2KiDaL1xkbQ").unwrap();
+    let key = Pbkdf2.hash_password("test".to_string().as_bytes(), &salt).unwrap().hash.unwrap();
+
+    let encryption = Encryption::new(key.as_bytes());
+    let ciphertext = encryption.encrypt("hello").unwrap();
+
+    let plaintext = encryption.decrypt(ciphertext.ciphertext, ciphertext.nonce).unwrap();
+    assert_eq!(plaintext, "hello")
+  }
+}

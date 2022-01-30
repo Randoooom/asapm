@@ -1,7 +1,6 @@
-#![cfg_attr(
-all(not(debug_assertions), target_os = "linux"),
-)]
 #![feature(async_closure)]
+
+extern crate core;
 
 mod model;
 mod commands;

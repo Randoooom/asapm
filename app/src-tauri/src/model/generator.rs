@@ -70,7 +70,7 @@ impl PasswordGenerator {
     let dataset = dataset.chars().collect::<Vec<char>>();
 
     if dataset.len() == 0 {
-      return String::from("")
+      return String::from("");
     }
 
     // generate random numbers
@@ -80,6 +80,117 @@ impl PasswordGenerator {
     let password = numbers.iter().map(|number| { dataset[*number as usize % &dataset.len()] }).collect::<String>();
 
     password
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_default() {
+    let generator = PasswordGenerator::default();
+    assert_eq!(generator.symbols, true);
+    assert_eq!(generator.letters, true);
+    assert_eq!(generator.numbers, true);
+    assert_eq!(generator.length, 32);
+  }
+
+  #[test]
+  fn test_default_set() {
+    let generator = PasswordGenerator::default();
+    let set = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-_+/0123456789"
+      .chars()
+      .collect::<Vec<char>>();
+
+    let password: String = generator.generate(None);
+
+    password.chars().into_iter().for_each(|char| {
+      assert!(set.contains(&char))
+    });
+  }
+
+  #[test]
+  fn test_numbers() {
+    let generator = PasswordGenerator {
+      length: 32,
+      numbers: true,
+      symbols: false,
+      letters: false,
+    };
+    let set = "0123456789"
+      .chars()
+      .collect::<Vec<char>>();
+
+    let password: String = generator.generate(None);
+
+    password.chars().into_iter().for_each(|char| {
+      assert!(set.contains(&char))
+    });
+  }
+
+  #[test]
+  fn test_letters() {
+    let generator = PasswordGenerator {
+      length: 32,
+      numbers: false,
+      symbols: false,
+      letters: true,
+    };
+    let set = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      .chars()
+      .collect::<Vec<char>>();
+
+    let password: String = generator.generate(None);
+
+    password.chars().into_iter().for_each(|char| {
+      assert!(set.contains(&char))
+    });
+  }
+
+  #[test]
+  fn test_symbols() {
+    let generator = PasswordGenerator {
+      length: 32,
+      numbers: false,
+      symbols: true,
+      letters: false,
+    };
+    let set = "!@#$%^&*()-_+/"
+      .chars()
+      .collect::<Vec<char>>();
+
+    let password: String = generator.generate(None);
+
+    password.chars().into_iter().for_each(|char| {
+      assert!(set.contains(&char))
+    });
+  }
+
+  #[test]
+  fn test_length() {
+    let generator = PasswordGenerator {
+      length: 26,
+      numbers: true,
+      symbols: true,
+      letters: true,
+    };
+
+    let password: String = generator.generate(None);
+    assert_eq!(26, password.len());
+  }
+
+  #[test]
+  fn test_custom() {
+    let generator = PasswordGenerator::default();
+    let password = generator.generate(Some(PasswordGenerator {
+      length: 24,
+      symbols: true,
+      letters: true,
+      numbers: true
+    }));
+
+    assert_eq!(24, password.len());
   }
 }
 

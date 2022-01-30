@@ -46,7 +46,7 @@ pub struct AnalyseResult {
   very_weak: Vec<String>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct UserData {
   username: String,
   password: String,
@@ -395,5 +395,95 @@ impl User {
 
   pub fn passwords(&self) -> Vec<PasswordType> {
     self.passwords.clone()
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use tempfile::{TempDir};
+  use super::*;
+
+  #[test]
+  fn test_signup() {
+    let data = UserData {
+      username: String::from("username"),
+      password: String::from("password"),
+    };
+    let dir = TempDir::new().unwrap();
+    User::new_from_signup(&dir.as_ref().to_path_buf(), data).unwrap();
+    dir.close().unwrap();
+  }
+
+  #[test]
+  fn test_login() {
+    let data = UserData {
+      username: String::from("username"),
+      password: String::from("password"),
+    };
+    let dir = TempDir::new().unwrap();
+    let user = User::new_from_signup(&dir.as_ref().to_path_buf(), data.clone()).unwrap();
+
+    let login = User::new_from_login(&dir.as_ref().to_path_buf(), data).unwrap();
+    dir.close().unwrap();
+    assert_eq!(user.username, login.username);
+  }
+
+  #[test]
+  #[should_panic]
+  fn test_auth() {
+    let data = UserData {
+      username: String::from("username"),
+      password: String::from("password"),
+    };
+    let dir = TempDir::new().unwrap();
+    User::new_from_signup(&dir.as_ref().to_path_buf(), data.clone()).unwrap();
+
+    User::new_from_login(&dir.as_ref().to_path_buf(), UserData {
+      username: String::from("username"),
+      password: String::from("te") }
+    ).unwrap();
+  }
+
+  #[test]
+  fn test_new_password() {
+    let data = UserData {
+      username: String::from("username"),
+      password: String::from("password"),
+    };
+    let dir = TempDir::new().unwrap();
+    let mut user = User::new_from_signup(&dir.as_ref().to_path_buf(), data.clone()).unwrap();
+    user.new_password();
+    assert_eq!(1, user.passwords().len());
+  }
+
+  #[test]
+  fn test_update_password() {
+    let data = UserData {
+      username: String::from("username"),
+      password: String::from("password"),
+    };
+    let dir = TempDir::new().unwrap();
+    let mut user = User::new_from_signup(&dir.as_ref().to_path_buf(), data.clone()).unwrap();
+    let mut password = user.new_password();
+    password.password = Some(String::from("test"));
+    user.update_password(password);
+
+    assert_eq!(1, user.passwords().len());
+    if let PasswordType::Data(pwd) = user.passwords().first().unwrap() {
+      assert_eq!(&String::from("test"), pwd.password.as_ref().unwrap())
+    }
+    else { panic!("Wrong enum") }
+  }
+
+  fn test_delete_password() {
+    let data = UserData {
+      username: String::from("username"),
+      password: String::from("password"),
+    };
+    let dir = TempDir::new().unwrap();
+    let mut user = User::new_from_signup(&dir.as_ref().to_path_buf(), data.clone()).unwrap();
+    let password = user.new_password();
+    user.delete_password(password);
+    assert_eq!(0, user.passwords().len());
   }
 }
