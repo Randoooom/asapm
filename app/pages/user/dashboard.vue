@@ -30,6 +30,9 @@
         <password-dialog v-model='dialog' />
 
         <v-btn color='primary' outlined @click='dialog = true'>
+          <v-icon>
+            add
+          </v-icon>
           Create new password
         </v-btn>
       </v-card-title>
