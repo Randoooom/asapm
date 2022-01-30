@@ -45,7 +45,7 @@ import Component from 'vue-class-component'
   name: 'Default',
   components: {
     'navigation-drawer': () => import('~/components/layout/NavigationDrawer.vue'),
-    'password-generator': () => import('~/components/password/PasswordGenerator.vue'),
+    'password-generator': () => import('~/components/password/PasswordGenerator.vue')
   }
 })
 export default class DefaultLayout extends Vue {
@@ -65,8 +65,23 @@ export default class DefaultLayout extends Vue {
 
 <style lang='sass'>
 html
-  .v-app
-    min-height: 100vh
+  .v-application
+    background-image: url("~/assets/MountainWallpaper.jpg") !important
+    background-repeat: no-repeat !important
+    background-position: center !important
+    background-size: cover !important
+    background-attachment: fixed !important
+
+    .v-application--wrap
+      opacity: 0.8
+
+      *
+        .v-card
+          opacity: 0.96
+
+  .theme--dark.v-application
+    .v-application--wrap
+      background: black
 
   a
     text-decoration: none
