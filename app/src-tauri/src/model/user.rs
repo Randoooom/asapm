@@ -26,7 +26,6 @@
 use thiserror::Error;
 use std::fs;
 use std::path::PathBuf;
-use rand::Rng;
 use pbkdf2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
 use pbkdf2::password_hash::rand_core::OsRng;
 use pbkdf2::Pbkdf2;

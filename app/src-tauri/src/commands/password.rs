@@ -26,7 +26,7 @@
 use tauri::{AppHandle, command, State, Wry};
 use tauri::api::path::app_dir;
 use crate::model::user::{PasswordType, PasswordData, AnalyseResult};
-use crate::{User, UserState};
+use crate::{UserState};
 
 #[command]
 pub fn get_passwords(state: State<'_, UserState>) -> Vec<PasswordType> {

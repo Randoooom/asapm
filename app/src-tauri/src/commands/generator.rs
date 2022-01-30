@@ -25,7 +25,7 @@
 
 use tauri::{AppHandle, command, State, Wry};
 use tauri::api::path::app_dir;
-use crate::{User, UserState};
+use crate::{UserState};
 use crate::model::generator::PasswordGenerator;
 
 #[command]
