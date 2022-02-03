@@ -23,8 +23,8 @@
  * SOFTWARE.
  */
 
-use serde::{Deserialize, Serialize};
 use crate::model::encryption::{Encryption, EncryptionError};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Backup {

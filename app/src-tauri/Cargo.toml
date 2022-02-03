@@ -1,11 +1,11 @@
 [package]
-name = "app"
+name = "asapm"
 version = "0.1.0"
 description = "Another slighlty avoidable password manager"
 authors = ["Randoooom"]
 license = ""
 repository = ""
-default-run = "app"
+default-run = "asapm"
 edition = "2018"
 build = "src/build.rs"
 
@@ -25,11 +25,8 @@ rand = "0.8.4"
 thiserror = "1.0.30"
 base64 = "0.13.0"
 zxcvbn = "2.1.2"
+tempfile = "3.3.0"
 
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
-
-[profile.release.package.wry]
-debug = true
-debug-assertions = true
