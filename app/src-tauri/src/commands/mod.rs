@@ -24,5 +24,5 @@
  */
 
 pub mod authentication;
-pub mod password;
 pub mod generator;
+pub mod password;

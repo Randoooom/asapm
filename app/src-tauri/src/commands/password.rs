@@ -23,22 +23,26 @@
  * SOFTWARE.
  */
 
-use tauri::{AppHandle, command, State, Wry};
-use tauri::api::path::app_dir;
-use crate::model::user::{PasswordType, PasswordData, AnalyseResult};
-use crate::{UserState};
+use crate::{
+  model::user::{AnalyseResult, PasswordData, PasswordType},
+  UserState,
+};
+use tauri::{api::path::app_dir, command, AppHandle, State, Wry};
 
 #[command]
 pub fn get_passwords(state: State<'_, UserState>) -> Vec<PasswordType> {
   // get the user
   match &*state.0.lock().unwrap() {
     Some(user) => user.passwords(),
-    None => Vec::new()
+    None => Vec::new(),
   }
 }
 
 #[command]
-pub fn new_password(state: State<'_, UserState>, handle: AppHandle<Wry>) -> Result<PasswordData, ()> {
+pub fn new_password(
+  state: State<'_, UserState>,
+  handle: AppHandle<Wry>,
+) -> Result<PasswordData, ()> {
   // get the user out of the stat
   match &mut *state.0.lock().unwrap() {
     Some(user) => {
@@ -46,15 +50,19 @@ pub fn new_password(state: State<'_, UserState>, handle: AppHandle<Wry>) -> Resu
       // save data
       match user.write(&app_dir(&*handle.config()).unwrap()) {
         Ok(()) => Ok(data),
-        Err(_) => Err(())
+        Err(_) => Err(()),
       }
     }
-    None => Err(())
+    None => Err(()),
   }
 }
 
 #[command]
-pub fn update_password(data: PasswordData, state: State<'_, UserState>, handle: AppHandle<Wry>) -> Result<(), ()> {
+pub fn update_password(
+  data: PasswordData,
+  state: State<'_, UserState>,
+  handle: AppHandle<Wry>,
+) -> Result<(), ()> {
   // get the user
   match &mut *state.0.lock().unwrap() {
     Some(user) => {
@@ -62,15 +70,19 @@ pub fn update_password(data: PasswordData, state: State<'_, UserState>, handle: 
       // save data
       match user.write(&app_dir(&*handle.config()).unwrap()) {
         Ok(()) => Ok(()),
-        Err(_) => Err(())
+        Err(_) => Err(()),
       }
     }
-    None => Err(())
+    None => Err(()),
   }
 }
 
 #[command]
-pub fn delete_password(data: PasswordData, state: State<'_, UserState>, handle: AppHandle<Wry>) -> Result<(), ()> {
+pub fn delete_password(
+  data: PasswordData,
+  state: State<'_, UserState>,
+  handle: AppHandle<Wry>,
+) -> Result<(), ()> {
   // get the user
   match &mut *state.0.lock().unwrap() {
     Some(user) => {
@@ -78,10 +90,10 @@ pub fn delete_password(data: PasswordData, state: State<'_, UserState>, handle: 
       // save data
       match user.write(&app_dir(&*handle.config()).unwrap()) {
         Ok(()) => Ok(()),
-        Err(_) => Err(())
+        Err(_) => Err(()),
       }
     }
-    None => Err(())
+    None => Err(()),
   }
 }
 
@@ -89,7 +101,7 @@ pub fn delete_password(data: PasswordData, state: State<'_, UserState>, handle: 
 pub fn password_strength(password: String) -> Result<u8, ()> {
   match zxcvbn::zxcvbn(password.as_str(), &[]) {
     Ok(entropy) => Ok(entropy.score()),
-    Err(_) => Err(())
+    Err(_) => Err(()),
   }
 }
 
@@ -98,6 +110,6 @@ pub fn analyse(state: State<'_, UserState>) -> Result<AnalyseResult, ()> {
   // get the user
   match &*state.0.lock().unwrap() {
     Some(user) => Ok(user.analyse_passwords()),
-    None => Err(())
+    None => Err(()),
   }
 }

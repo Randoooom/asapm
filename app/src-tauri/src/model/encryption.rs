@@ -23,10 +23,12 @@
  * SOFTWARE.
  */
 
+use aes_gcm_siv::{
+  aead::{Aead, NewAead},
+  Aes256GcmSiv, Key, Nonce,
+};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use aes_gcm_siv::{Aes256GcmSiv, Key, Nonce};
-use aes_gcm_siv::aead::{Aead, NewAead};
 
 #[derive(Error, Debug)]
 pub enum EncryptionError {
@@ -55,7 +57,9 @@ impl Encryption {
   /// generate random nonce
   pub fn generate(length: usize) -> String {
     // generate random bytes
-    let bytes = (0..length).map(|_| { rand::random::<u8>() }).collect::<Vec<u8>>();
+    let bytes = (0..length)
+      .map(|_| rand::random::<u8>())
+      .collect::<Vec<u8>>();
 
     base64::encode(bytes)
   }
@@ -66,9 +70,7 @@ impl Encryption {
     // build cipher
     let cipher = Aes256GcmSiv::new(key);
 
-    Self {
-      cipher
-    }
+    Self { cipher }
   }
 
   /// decrypt a &str into a String
@@ -77,7 +79,9 @@ impl Encryption {
     // create nonce as array
     let nonce = Nonce::from_slice(iv.as_bytes());
     // decrypt
-    let plaintext = self.cipher.decrypt(&nonce, base64::decode(data).unwrap().as_slice())?;
+    let plaintext = self
+      .cipher
+      .decrypt(&nonce, base64::decode(data).unwrap().as_slice())?;
     let parsed = String::from_utf8(plaintext.clone()).unwrap_or(base64::encode(plaintext));
     Ok(parsed)
   }
@@ -93,21 +97,21 @@ impl Encryption {
     let ciphertext = base64::encode(ciphertext);
 
     // return nonce and ciphertext
-    Ok(
-      CipherText {
-        ciphertext,
-        nonce: nonce_string,
-      }
-    )
+    Ok(CipherText {
+      ciphertext,
+      nonce: nonce_string,
+    })
   }
 }
 
 #[cfg(test)]
 mod tests {
-  use pbkdf2::password_hash::{PasswordHasher, SaltString};
-  use pbkdf2::Pbkdf2;
-  use rand::rngs::OsRng;
   use super::*;
+  use pbkdf2::{
+    password_hash::{PasswordHasher, SaltString},
+    Pbkdf2,
+  };
+  use rand::rngs::OsRng;
 
   #[test]
   fn test_iv_length() {
@@ -118,19 +122,27 @@ mod tests {
   #[test]
   fn test_key_length() {
     let salt = SaltString::generate(&mut OsRng);
-    let hash = Pbkdf2.hash_password("test".to_string().as_bytes(), &salt).unwrap();
+    let hash = Pbkdf2
+      .hash_password("test".to_string().as_bytes(), &salt)
+      .unwrap();
     assert_eq!(hash.hash.unwrap().as_bytes().len(), 32)
   }
 
   #[test]
   fn test_encryption() {
     let salt = SaltString::new("mgtQBCKsArg2KiDaL1xkbQ").unwrap();
-    let key = Pbkdf2.hash_password("test".to_string().as_bytes(), &salt).unwrap().hash.unwrap();
+    let key = Pbkdf2
+      .hash_password("test".to_string().as_bytes(), &salt)
+      .unwrap()
+      .hash
+      .unwrap();
 
     let encryption = Encryption::new(key.as_bytes());
     let ciphertext = encryption.encrypt("hello").unwrap();
 
-    let plaintext = encryption.decrypt(ciphertext.ciphertext, ciphertext.nonce).unwrap();
+    let plaintext = encryption
+      .decrypt(ciphertext.ciphertext, ciphertext.nonce)
+      .unwrap();
     assert_eq!(plaintext, "hello")
   }
 }

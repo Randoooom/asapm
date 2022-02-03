@@ -23,17 +23,19 @@
  * SOFTWARE.
  */
 
-use thiserror::Error;
-use std::fs;
-use std::path::PathBuf;
-use pbkdf2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
-use pbkdf2::password_hash::rand_core::OsRng;
-use pbkdf2::Pbkdf2;
+use crate::model::{
+  backup::Backup,
+  encryption::{Encryption, EncryptionError},
+  generator::PasswordGenerator,
+};
+use pbkdf2::{
+  password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+  Pbkdf2,
+};
 use serde::{Deserialize, Serialize};
+use std::{fs, path::PathBuf};
+use thiserror::Error;
 use uuid::Uuid;
-use crate::model::backup::Backup;
-use crate::model::encryption::{Encryption, EncryptionError};
-use crate::model::generator::PasswordGenerator;
 
 #[derive(Deserialize, Serialize)]
 pub struct AnalyseResult {
@@ -159,17 +161,26 @@ impl RawUser {
 impl From<&User> for RawUser {
   fn from(user: &User) -> Self {
     // encrypt the passwords
-    let passwords = user.passwords.iter().map(|password| {
-      // stringify
-      let raw = serde_json::to_string(password).unwrap();
-      // encrypt
-      let encrypted = user.encryption.clone().unwrap().encrypt(raw.as_str()).unwrap();
+    let passwords = user
+      .passwords
+      .iter()
+      .map(|password| {
+        // stringify
+        let raw = serde_json::to_string(password).unwrap();
+        // encrypt
+        let encrypted = user
+          .encryption
+          .clone()
+          .unwrap()
+          .encrypt(raw.as_str())
+          .unwrap();
 
-      Password {
-        iv: encrypted.nonce,
-        data: encrypted.ciphertext,
-      }
-    }).collect::<Vec<Password>>();
+        Password {
+          iv: encrypted.nonce,
+          data: encrypted.ciphertext,
+        }
+      })
+      .collect::<Vec<Password>>();
 
     Self {
       username: user.username(),
@@ -209,7 +220,9 @@ impl User {
         // hash the password
         let salt = SaltString::generate(&mut OsRng);
         let hash_salt = salt.as_str();
-        let hash = Pbkdf2.hash_password(data.password.as_bytes(), &salt).unwrap();
+        let hash = Pbkdf2
+          .hash_password(data.password.as_bytes(), &salt)
+          .unwrap();
 
         // setup the file key as random base64
         let key = Encryption::generate(32);
@@ -222,7 +235,9 @@ impl User {
 
         // second time because we encrypt the key with the first hash
         let salt = SaltString::generate(&mut OsRng);
-        let hash = Pbkdf2.hash_password(hash.to_string().as_bytes(), &salt).unwrap();
+        let hash = Pbkdf2
+          .hash_password(hash.to_string().as_bytes(), &salt)
+          .unwrap();
 
         // init the user
         let user = Self {
@@ -258,7 +273,9 @@ impl User {
     let hash = PasswordHash::new(cloned.hash.as_str()).unwrap();
     // hash the input password
     let salt = SaltString::new(raw.password.salt.as_str()).unwrap();
-    let password = Pbkdf2.hash_password(data.password.as_bytes(), &salt).unwrap();
+    let password = Pbkdf2
+      .hash_password(data.password.as_bytes(), &salt)
+      .unwrap();
     // match the hashes
     match Pbkdf2.verify_password(password.to_string().as_bytes(), &hash) {
       Ok(()) => {
@@ -275,26 +292,29 @@ impl User {
         }
 
         // decrypt the passwords
-        let passwords = raw.passwords.iter().map(|password| {
-          // decrypt the data
-          let raw = encryption.decrypt(password.data.clone(), password.iv.clone()).unwrap();
-          // parse json
-          PasswordType::Data(serde_json::from_str::<PasswordData>(raw.as_str()).unwrap())
-        })
+        let passwords = raw
+          .passwords
+          .iter()
+          .map(|password| {
+            // decrypt the data
+            let raw = encryption
+              .decrypt(password.data.clone(), password.iv.clone())
+              .unwrap();
+            // parse json
+            PasswordType::Data(serde_json::from_str::<PasswordData>(raw.as_str()).unwrap())
+          })
           .collect::<Vec<PasswordType>>();
 
-        Ok(
-          Self {
-            username: raw.username,
-            backup: raw.backup,
-            encryption: Some(encryption),
-            password: raw.password,
-            passwords,
-            generator: raw.generator,
-          }
-        )
+        Ok(Self {
+          username: raw.username,
+          backup: raw.backup,
+          encryption: Some(encryption),
+          password: raw.password,
+          passwords,
+          generator: raw.generator,
+        })
       }
-      Err(_) => Err(ConfigError::Unknown)
+      Err(_) => Err(ConfigError::Unknown),
     }
   }
 
@@ -325,25 +345,35 @@ impl User {
   /// update an specific password
   pub fn update_password(&mut self, data: PasswordData) {
     // update an existing password
-    self.passwords = self.passwords.clone().into_iter().map(|ty| {
-      if let PasswordType::Data(password) = ty.clone() {
-        if password.clone().uuid.eq(&data.uuid) {
-          return PasswordType::Data(data.clone());
+    self.passwords = self
+      .passwords
+      .clone()
+      .into_iter()
+      .map(|ty| {
+        if let PasswordType::Data(password) = ty.clone() {
+          if password.clone().uuid.eq(&data.uuid) {
+            return PasswordType::Data(data.clone());
+          }
         }
-      }
-      ty
-    }).collect::<Vec<PasswordType>>();
+        ty
+      })
+      .collect::<Vec<PasswordType>>();
   }
 
   /// delete an existing password
   pub fn delete_password(&mut self, data: PasswordData) {
     // remove it via filter
-    self.passwords = self.passwords.clone().into_iter().filter(|ty| {
-      if let PasswordType::Data(password) = ty.clone() {
-        return !password.uuid.eq(&data.uuid);
-      }
-      true
-    }).collect::<Vec<PasswordType>>();
+    self.passwords = self
+      .passwords
+      .clone()
+      .into_iter()
+      .filter(|ty| {
+        if let PasswordType::Data(password) = ty.clone() {
+          return !password.uuid.eq(&data.uuid);
+        }
+        true
+      })
+      .collect::<Vec<PasswordType>>();
   }
 
   pub fn analyse_passwords(&self) -> AnalyseResult {
@@ -359,7 +389,13 @@ impl User {
       if let PasswordType::Data(password) = ty.clone() {
         self.passwords.clone().into_iter().for_each(|cty| {
           if let PasswordType::Data(compare) = cty.clone() {
-            if compare.password.as_ref().unwrap().eq(password.password.as_ref().unwrap()) && !compare.uuid.eq(&password.uuid) {
+            if compare
+              .password
+              .as_ref()
+              .unwrap()
+              .eq(password.password.as_ref().unwrap())
+              && !compare.uuid.eq(&password.uuid)
+            {
               reused.push(compare.uuid.clone());
               reused.push(password.uuid.clone());
             }
@@ -367,7 +403,10 @@ impl User {
         });
 
         // sort by strength
-        match zxcvbn::zxcvbn(password.password.as_ref().unwrap().as_str(), &[]).unwrap().score() {
+        match zxcvbn::zxcvbn(password.password.as_ref().unwrap().as_str(), &[])
+          .unwrap()
+          .score()
+        {
           0 => very_weak.push(password.uuid.clone()),
           1 => weak.push(password.uuid.clone()),
           2 => medium.push(password.uuid.clone()),
@@ -400,8 +439,8 @@ impl User {
 
 #[cfg(test)]
 mod tests {
-  use tempfile::{TempDir};
   use super::*;
+  use tempfile::TempDir;
 
   #[test]
   fn test_signup() {
@@ -438,10 +477,14 @@ mod tests {
     let dir = TempDir::new().unwrap();
     User::new_from_signup(&dir.as_ref().to_path_buf(), data.clone()).unwrap();
 
-    User::new_from_login(&dir.as_ref().to_path_buf(), UserData {
-      username: String::from("username"),
-      password: String::from("te") }
-    ).unwrap();
+    User::new_from_login(
+      &dir.as_ref().to_path_buf(),
+      UserData {
+        username: String::from("username"),
+        password: String::from("te"),
+      },
+    )
+    .unwrap();
   }
 
   #[test]
@@ -471,10 +514,12 @@ mod tests {
     assert_eq!(1, user.passwords().len());
     if let PasswordType::Data(pwd) = user.passwords().first().unwrap() {
       assert_eq!(&String::from("test"), pwd.password.as_ref().unwrap())
+    } else {
+      panic!("Wrong enum")
     }
-    else { panic!("Wrong enum") }
   }
 
+  #[test]
   fn test_delete_password() {
     let data = UserData {
       username: String::from("username"),

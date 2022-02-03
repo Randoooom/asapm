@@ -23,13 +23,15 @@
  * SOFTWARE.
  */
 
-use tauri::{State, command, AppHandle, Wry};
-use tauri::api::path::app_dir;
-use crate::model::user::UserData;
-use crate::{User, UserState};
+use crate::{model::user::UserData, User, UserState};
+use tauri::{api::path::app_dir, command, AppHandle, State, Wry};
 
 #[command]
-pub fn login(data: UserData, state: State<'_, UserState>, handle: AppHandle<Wry>) -> Result<(), ()> {
+pub fn login(
+  data: UserData,
+  state: State<'_, UserState>,
+  handle: AppHandle<Wry>,
+) -> Result<(), ()> {
   // create the user from the data
   match User::new_from_login(&app_dir(&*handle.config()).unwrap(), data) {
     Ok(user) => {
@@ -37,12 +39,16 @@ pub fn login(data: UserData, state: State<'_, UserState>, handle: AppHandle<Wry>
       *state.0.lock().unwrap() = Some(user);
       Ok(())
     }
-    Err(_) => Err(())
+    Err(_) => Err(()),
   }
 }
 
 #[command]
-pub fn signup(data: UserData, state: State<'_, UserState>, handle: AppHandle<Wry>) -> Result<(), ()> {
+pub fn signup(
+  data: UserData,
+  state: State<'_, UserState>,
+  handle: AppHandle<Wry>,
+) -> Result<(), ()> {
   // prevent already existing users creating new ones
   if let Some(_) = *state.0.lock().unwrap() {
     return Err(());
@@ -54,7 +60,7 @@ pub fn signup(data: UserData, state: State<'_, UserState>, handle: AppHandle<Wry
       *state.0.lock().unwrap() = Some(user);
       Ok(())
     }
-    Err(_) => Err(())
+    Err(_) => Err(()),
   }
 }
 

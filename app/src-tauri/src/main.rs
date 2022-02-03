@@ -1,13 +1,14 @@
 #![feature(async_closure)]
 
-mod model;
 mod commands;
+mod model;
 
-use std::fs;
-use std::sync::{Arc, Mutex};
-use tauri::api::path::{app_dir};
-use tauri::{generate_handler};
 use crate::model::user::User;
+use std::{
+  fs,
+  sync::{Arc, Mutex},
+};
+use tauri::{api::path::app_dir, generate_handler};
 
 pub struct UserState(Arc<Mutex<Option<User>>>);
 

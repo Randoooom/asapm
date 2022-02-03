@@ -48,7 +48,7 @@ impl PasswordGenerator {
   pub fn generate(&self, generator: Option<Self>) -> String {
     let generator = match generator {
       Some(generator) => generator,
-      None => self.clone()
+      None => self.clone(),
     };
 
     // setup dataset
@@ -74,10 +74,15 @@ impl PasswordGenerator {
     }
 
     // generate random numbers
-    let numbers = (0..generator.length).map(|_| { rand::random::<u8>() }).collect::<Vec<u8>>();
+    let numbers = (0..generator.length)
+      .map(|_| rand::random::<u8>())
+      .collect::<Vec<u8>>();
 
     // iter through the numbers and add push the matching char into the password
-    let password = numbers.iter().map(|number| { dataset[*number as usize % &dataset.len()] }).collect::<String>();
+    let password = numbers
+      .iter()
+      .map(|number| dataset[*number as usize % &dataset.len()])
+      .collect::<String>();
 
     password
   }
@@ -105,9 +110,10 @@ mod tests {
 
     let password: String = generator.generate(None);
 
-    password.chars().into_iter().for_each(|char| {
-      assert!(set.contains(&char))
-    });
+    password
+      .chars()
+      .into_iter()
+      .for_each(|char| assert!(set.contains(&char)));
   }
 
   #[test]
@@ -118,15 +124,14 @@ mod tests {
       symbols: false,
       letters: false,
     };
-    let set = "0123456789"
-      .chars()
-      .collect::<Vec<char>>();
+    let set = "0123456789".chars().collect::<Vec<char>>();
 
     let password: String = generator.generate(None);
 
-    password.chars().into_iter().for_each(|char| {
-      assert!(set.contains(&char))
-    });
+    password
+      .chars()
+      .into_iter()
+      .for_each(|char| assert!(set.contains(&char)));
   }
 
   #[test]
@@ -143,9 +148,10 @@ mod tests {
 
     let password: String = generator.generate(None);
 
-    password.chars().into_iter().for_each(|char| {
-      assert!(set.contains(&char))
-    });
+    password
+      .chars()
+      .into_iter()
+      .for_each(|char| assert!(set.contains(&char)));
   }
 
   #[test]
@@ -156,15 +162,14 @@ mod tests {
       symbols: true,
       letters: false,
     };
-    let set = "!@#$%^&*()-_+/"
-      .chars()
-      .collect::<Vec<char>>();
+    let set = "!@#$%^&*()-_+/".chars().collect::<Vec<char>>();
 
     let password: String = generator.generate(None);
 
-    password.chars().into_iter().for_each(|char| {
-      assert!(set.contains(&char))
-    });
+    password
+      .chars()
+      .into_iter()
+      .for_each(|char| assert!(set.contains(&char)));
   }
 
   #[test]
@@ -187,10 +192,9 @@ mod tests {
       length: 24,
       symbols: true,
       letters: true,
-      numbers: true
+      numbers: true,
     }));
 
     assert_eq!(24, password.len());
   }
 }
-

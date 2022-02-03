@@ -1,0 +1,25 @@
+on: [pull_request]
+
+name: Tests
+
+defaults:
+  run:
+    working-directory: ./app/src-tauri/
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install packages
+        run: |
+          sudo apt update
+          sudo apt install -y libgtk-3-dev libwebkit2gtk-4.0-dev
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --manifest-path ./app/src-tauri/Cargo.toml
