@@ -1,7 +1,7 @@
-on: [pull_request] # only for testing
-#  push:
-#    branches:
-#      - release
+on:
+  push:
+    branches:
+      - release
 
 name: publish
 
