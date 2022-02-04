@@ -1,0 +1,43 @@
+on:
+  push:
+    branches:
+      - release
+
+name: publish
+
+jobs:
+  publish-tauri:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Install tauri bundler
+        run: cargo install tauri-bundler --force
+      - name: Install packages
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt update
+          sudo apt install -y libgtk-3-dev libwebkit2gtk-4.0-dev
+      - name: Install npm dependencies and build it
+        run: npm ci && npm run generate
+        working-directory: ./app/
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: asapm-v__VERSION__
+          releaseName: "ASAPM v__VERSION__"
+          body: "See the assets to download this version and install."
+          draft: true
+          prerelease: false
+          projectPath: ./app
