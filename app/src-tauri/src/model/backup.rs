@@ -31,12 +31,60 @@ pub struct Backup {
   // the uuid will be encrypted with the user password for better security on the local disk
   // will be available in plaintext here, not sure how secure that is
   uuid: String,
+  url: String,
   enabled: bool,
   // the aes iv
   iv: String,
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct BackupUser {
+  password: String,
+  uuid: String,
+  data: String,
+}
+
+#[derive(Deserialize, Serialize)]
+struct BackupSignup {
+  password: String,
+}
+
 impl Backup {
+  /// setup new backup instance
+  pub async fn new(url: String, password: String) -> Result<Self, reqwest::Error> {
+    // setup client
+    let client = reqwest::Client::new();
+    // setup the json body
+    let body = serde_json::to_string(&BackupSignup { password }).unwrap();
+
+    // send signup request
+    match client
+      .post(format!("{}/auth/signup", url))
+      .body(body)
+      .send()
+      .await?
+      .json::<BackupUser>()
+      .await
+    {
+      Ok(user) => {
+        println!("{:?}", &user);
+
+        // build the backup
+        let backup = Backup {
+          uuid: user.uuid,
+          url: url.to_string(),
+          enabled: true,
+          iv: String::from(""),
+        };
+
+        Ok(backup)
+      }
+      Err(error) => Err(error),
+    }
+  }
+
+  pub async fn get_data(&self, password: String) -> String {}
+
   pub fn uuid(self) -> String {
     self.uuid.clone()
   }
@@ -51,5 +99,18 @@ impl Backup {
     self.uuid = encryption.decrypt(self.uuid.clone(), self.iv.clone())?;
     // return the updated version
     Ok(self)
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use pbkdf2::{password_hash::PasswordHash, Pbkdf2};
+
+  #[tokio::test]
+  async fn test_new() {
+    Backup::new("http://localhost:8787".to_string(), "password".to_string())
+      .await
+      .unwrap();
   }
 }
