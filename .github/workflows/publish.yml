@@ -5,16 +5,12 @@ on: [pull_request] # only for testing
 
 name: publish
 
-defaults:
-  run:
-    working-directory: ./app/src-tauri/
-
 jobs:
   publish-tauri:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, ubuntu-latest, windows-latest]
+        platform: [ubuntu-latest]
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -33,7 +29,7 @@ jobs:
           sudo apt update
           sudo apt install -y libgtk-3-dev libwebkit2gtk-4.0-dev
       - name: Install npm dependencies and build it
-        run: npm ci && npm run generate
+        run: npm ci && npm run generate && ls
         working-directory: ./app/
       - uses: tauri-apps/tauri-action@v0
         env:
@@ -44,3 +40,4 @@ jobs:
           body: "See the assets to download this version and install."
           draft: true
           prerelease: false
+          projectPath: ./app/src-tauri/
