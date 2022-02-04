@@ -83,7 +83,7 @@ impl Backup {
     }
   }
 
-  pub async fn get_data(&self, password: String) -> String {}
+  // pub async fn get_data(&self, password: String) -> String {}
 
   pub fn uuid(self) -> String {
     self.uuid.clone()
@@ -105,7 +105,6 @@ impl Backup {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use pbkdf2::{password_hash::PasswordHash, Pbkdf2};
 
   #[tokio::test]
   async fn test_new() {
