@@ -54,7 +54,7 @@
     "windows": [
       {
         "title": "ASAPM",
-        "focus": "true",
+        "focus": true,
         "resizable": true,
         "fullscreen": false,
         "maximized": true
