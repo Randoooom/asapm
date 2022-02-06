@@ -140,7 +140,9 @@ impl RawUser {
   /// does not not contain any usable sensitive data
   fn new_from_disk(directory: &PathBuf, username: &str) -> Result<Self, ConfigError> {
     // create path for the possible user
-    let path = directory.join(username);
+    let path = directory
+      .join(username.to_lowercase().as_str())
+      .with_extension("json");
     // read file content
     let content = fs::read_to_string(path)?;
 
@@ -211,7 +213,9 @@ impl User {
   /// create new user from signup information
   pub fn new_from_signup(directory: &PathBuf, data: UserData) -> Result<Self, ConfigError> {
     // create the path
-    let path = directory.join(&data.username);
+    let path = directory
+      .join(&data.username.to_lowercase())
+      .with_extension("json");
     // check for already existing user
     match &path.exists() {
       // return err on true, because we will not overwrite any userdata
@@ -266,7 +270,7 @@ impl User {
   /// init new full user based on login credentials
   pub fn new_from_login(directory: &PathBuf, data: UserData) -> Result<Self, ConfigError> {
     // load raw user
-    let mut raw = RawUser::new_from_disk(directory, data.username.as_str())?;
+    let mut raw = RawUser::new_from_disk(directory, data.username.to_lowercase().as_str())?;
     let cloned = raw.password.clone();
 
     // compare passwords
@@ -323,7 +327,13 @@ impl User {
     // create the raw data
     let raw = RawUser::from(self);
     // write the data
-    raw.write_to_disk(&path.join(&self.username))
+    raw.write_to_disk(
+      &path
+        // name equals lowercase name
+        .join(&self.username.to_lowercase())
+        // format is json
+        .with_extension("json"),
+    )
   }
 
   /// create new password
@@ -455,12 +465,15 @@ mod tests {
 
   #[test]
   fn test_login() {
-    let data = UserData {
-      username: String::from("username"),
+    let mut data = UserData {
+      username: String::from("Username"),
       password: String::from("password"),
     };
     let dir = TempDir::new().unwrap();
     let user = User::new_from_signup(&dir.as_ref().to_path_buf(), data.clone()).unwrap();
+
+    // test case
+    data.username = String::from("UseRname");
 
     let login = User::new_from_login(&dir.as_ref().to_path_buf(), data).unwrap();
     dir.close().unwrap();

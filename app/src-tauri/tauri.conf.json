@@ -54,10 +54,10 @@
     "windows": [
       {
         "title": "ASAPM",
-        "width": 800,
-        "height": 600,
+        "focus": true,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "maximized": true
       }
     ],
     "security": {
